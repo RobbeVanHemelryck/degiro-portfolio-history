@@ -1,0 +1,1 @@
+- Never start, stop, or restart the Node.js server. The user manages the server themselves.

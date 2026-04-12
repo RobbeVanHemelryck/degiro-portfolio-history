@@ -1,0 +1,17 @@
+{
+  "name": "degiro-portfolio",
+  "version": "0.5.4",
+  "description": "DEGIRO portfolio tracking and visualization application",
+  "main": "src/server.js",
+  "scripts": {
+    "start": "node src/server.js",
+    "dev": "node --watch src/server.js"
+  },
+  "dependencies": {
+    "better-sqlite3": "^11.0.0",
+    "express": "^4.21.0",
+    "multer": "^1.4.5-lts.1",
+    "xlsx": "^0.18.5",
+    "yahoo-finance2": "^3.14.0"
+  }
+}

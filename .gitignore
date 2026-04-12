@@ -1,0 +1,80 @@
+# Node.js
+node_modules/
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+
+# Virtual Environment
+.venv/
+venv/
+ENV/
+env/
+
+# IDEs
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+.DS_Store
+
+# Project specific
+*.db
+*.db-shm
+*.db-wal
+*.sqlite
+*.sqlite3
+.degiro_portfolio.pid
+degiro_portfolio.log
+.stockchart.pid
+stockchart.log
+
+# Data files - exclude transaction data for privacy
+Transactions.xlsx
+*.xlsx
+*.xls
+# But include example and test data
+!example_data.xlsx
+!tests/degiro_dutch.xlsx
+# Test CSV data
+tests/degiro.csv
+
+# Testing
+.pytest_cache/
+.coverage
+htmlcov/
+tests/.test_data/
+
+# Documentation
+docs/_build/
+
+# Claude
+.claude/
+
+# Temporary files
+*.tmp
+*.bak
+examine_data.py
+
+# Lock files (optional - some prefer to commit these)
+# uv.lock
+.env

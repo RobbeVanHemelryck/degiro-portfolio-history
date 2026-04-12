@@ -1,0 +1,3333 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>DEGIRO Portfolio</title>
+    <link rel="icon" type="image/svg+xml" href="/static/favicon.svg">
+    <link rel="icon" type="image/png" sizes="32x32" href="/static/favicon.png">
+    <link rel="icon" type="image/png" sizes="16x16" href="/static/favicon-16x16.png">
+    <script src="https://cdn.plot.ly/plotly-2.27.0.min.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+            font-size: 14px;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .upload-btn {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            padding: 8px 16px;
+            border-radius: 6px;
+            font-size: 0.85em;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3);
+        }
+
+        .upload-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 16px rgba(102, 126, 234, 0.4);
+        }
+
+        .upload-btn:active {
+            transform: translateY(0);
+        }
+
+        .upload-btn-green {
+            background: linear-gradient(135deg, #48bb78 0%, #276749 100%);
+            box-shadow: 0 4px 12px rgba(72, 187, 120, 0.3);
+        }
+
+        .upload-btn-green:hover {
+            box-shadow: 0 6px 16px rgba(72, 187, 120, 0.4);
+        }
+
+        .purge-btn {
+            background: linear-gradient(135deg, #f56565 0%, #c53030 100%);
+            color: white;
+            border: none;
+            padding: 8px 16px;
+            border-radius: 6px;
+            font-size: 0.85em;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 12px rgba(245, 101, 101, 0.3);
+        }
+
+        .purge-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 16px rgba(245, 101, 101, 0.4);
+            background: linear-gradient(135deg, #fc8181 0%, #e53e3e 100%);
+        }
+
+        .purge-btn:active {
+            transform: translateY(0);
+        }
+
+        #file-input, #account-file-input {
+            display: none;
+        }
+
+        .upload-status {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            padding: 15px 20px;
+            border-radius: 8px;
+            background: white;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+            z-index: 1000;
+            display: none;
+        }
+
+        .upload-status.success {
+            border-left: 4px solid #48bb78;
+        }
+
+        .upload-status.error {
+            border-left: 4px solid #fc8181;
+        }
+
+        .upload-progress-container {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            width: 400px;
+            padding: 20px;
+            border-radius: 8px;
+            background: white;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+            z-index: 1000;
+            display: none;
+        }
+
+        .upload-progress-message {
+            margin-bottom: 12px;
+            font-size: 14px;
+            color: #333;
+            font-weight: 500;
+        }
+
+        .progress-bar-background {
+            width: 100%;
+            height: 8px;
+            background: #e2e8f0;
+            border-radius: 4px;
+            overflow: hidden;
+            position: relative;
+        }
+
+        .progress-bar-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #667eea 0%, #764ba2 100%);
+            border-radius: 4px;
+            transition: width 0.3s ease;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .progress-bar-fill::after {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: linear-gradient(
+                90deg,
+                transparent,
+                rgba(255, 255, 255, 0.3),
+                transparent
+            );
+            animation: shimmer 1.5s infinite;
+        }
+
+        @keyframes shimmer {
+            0% {
+                transform: translateX(-100%);
+            }
+            100% {
+                transform: translateX(100%);
+            }
+        }
+
+        .holdings-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+            gap: 12px;
+            margin-bottom: 20px;
+        }
+
+        .stock-card {
+            background: white;
+            padding: 12px 15px;
+            border-radius: 8px;
+            box-shadow: 0 3px 10px rgba(0, 0, 0, 0.08);
+            cursor: pointer;
+            transition: all 0.3s ease;
+            border: 2px solid transparent;
+        }
+
+        .stock-card:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 6px 18px rgba(0, 0, 0, 0.15);
+            border-color: #667eea;
+        }
+
+        .stock-card.active {
+            border-color: #48bb78;
+            background: #f0fdf4;
+            box-shadow: 0 4px 12px rgba(72, 187, 120, 0.15);
+        }
+
+        .stock-name {
+            font-size: 0.85em;
+            font-weight: 600;
+            color: #2d3748;
+            margin-bottom: 3px;
+            line-height: 1.2;
+        }
+
+        .stock-name a {
+            color: #2d3748;
+            text-decoration: none;
+            transition: color 0.2s;
+        }
+
+        .stock-name a:hover {
+            color: #667eea;
+            text-decoration: underline;
+        }
+
+        .stock-symbol {
+            color: #667eea;
+            font-weight: 600;
+            font-size: 0.75em;
+            margin-bottom: 2px;
+        }
+
+        .stock-ticker {
+            font-size: 0.65em;
+            margin-bottom: 2px;
+            font-family: monospace;
+        }
+
+        .stock-ticker a {
+            color: #718096;
+            text-decoration: none;
+            transition: color 0.2s;
+        }
+
+        .stock-ticker a:hover {
+            color: #667eea;
+            text-decoration: underline;
+        }
+
+        .stock-exchange {
+            color: #a0aec0;
+            font-size: 0.6em;
+            margin-bottom: 4px;
+        }
+
+        .stock-shares {
+            color: #48bb78;
+            font-size: 0.95em;
+            font-weight: bold;
+            margin-bottom: 2px;
+        }
+
+        .stock-price {
+            font-size: 0.8em;
+            margin-bottom: 3px;
+            color: #2d3748;
+        }
+
+        .stock-price .positive {
+            color: #48bb78;
+            font-weight: 600;
+            font-size: 0.75em;
+        }
+
+        .stock-price .negative {
+            color: #fc8181;
+            font-weight: 600;
+            font-size: 0.75em;
+        }
+
+        .stock-value-eur {
+            font-size: 0.85em;
+            font-weight: 600;
+            color: #4299e1;
+            margin-bottom: 3px;
+            margin-top: 2px;
+        }
+
+        .stock-meta {
+            color: #718096;
+            font-size: 0.65em;
+        }
+
+        .chart-container {
+            background: white;
+            padding: 20px;
+            border-radius: 15px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+            margin-bottom: 20px;
+        }
+
+        .chart-title {
+            font-size: 1.3em;
+            color: #2d3748;
+            margin-bottom: 15px;
+            font-weight: 600;
+        }
+
+        #chart {
+            width: 100%;
+            height: 450px;
+            margin-bottom: 20px;
+        }
+
+        #tranche-chart {
+            width: 100%;
+            height: 450px;
+        }
+
+        #index-chart {
+            width: 100%;
+            height: 350px;
+        }
+
+        #position-percentage-chart {
+            width: 100%;
+            height: 350px;
+        }
+
+        #portfolio-valuation-chart {
+            width: 100%;
+            height: 400px;
+        }
+
+        .chart-subtitle {
+            font-size: 1em;
+            color: #4a5568;
+            margin: 15px 0 8px 0;
+            font-weight: 600;
+        }
+
+        .tranche-list {
+            margin-top: 15px;
+            padding: 15px;
+            background: #f7fafc;
+            border-radius: 8px;
+            border: 1px solid #e2e8f0;
+        }
+
+        .tranche-item {
+            display: flex;
+            align-items: center;
+            padding: 10px;
+            margin-bottom: 8px;
+            background: white;
+            border-radius: 6px;
+            border-left: 4px solid;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .tranche-item:hover {
+            transform: translateX(4px);
+            box-shadow: 0 3px 8px rgba(0, 0, 0, 0.15);
+        }
+
+        .tranche-item.selected {
+            background: linear-gradient(135deg, #667eea15 0%, #764ba215 100%);
+            box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3);
+            transform: translateX(4px);
+        }
+
+        .tranche-color {
+            width: 24px;
+            height: 24px;
+            border-radius: 4px;
+            margin-right: 12px;
+            flex-shrink: 0;
+        }
+
+        .tranche-details {
+            flex-grow: 1;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .tranche-info {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .tranche-label {
+            font-weight: 700;
+            color: #667eea;
+            font-size: 0.85em;
+            margin-bottom: 2px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .tranche-date {
+            font-weight: 600;
+            color: #2d3748;
+            font-size: 0.95em;
+        }
+
+        .tranche-quantity {
+            color: #718096;
+            font-size: 0.85em;
+            margin-top: 2px;
+        }
+
+        .tranche-price {
+            font-weight: 600;
+            color: #667eea;
+            font-size: 0.95em;
+        }
+
+        .loading {
+            text-align: center;
+            padding: 30px;
+            color: white;
+            font-size: 1em;
+        }
+            vertical-align: top;
+        .error {
+            background: #fc8181;
+            color: white;
+            padding: 15px;
+            border-radius: 10px;
+            margin: 15px 0;
+            text-align: center;
+            font-size: 0.9em;
+        }
+            min-height: 18px;
+
+
+        .summary-content {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            height: 60px;
+        }
+        .info-message {
+            background: #90cdf4;
+            color: #1a365d;
+            padding: 15px;
+            border-radius: 10px;
+            margin: 15px 0;
+            text-align: center;
+            font-size: 0.95em;
+        }
+
+        .summary-subvalue {
+            font-size: 0.78em;
+            margin-top: 3px;
+            font-weight: 600;
+            opacity: 0.85;
+        }
+
+        #cash-movements-section .panel-content-inner {
+            padding: 0 8px;
+        }
+
+        #portfolio-chart-section .tt-date-picker,
+        #portfolio-chart-section #tt-content {
+            padding-left: 8px;
+            padding-right: 8px;
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+
+        .stat-box {
+            background: linear-gradient(135deg, #667eea15 0%, #764ba215 100%);
+            padding: 15px;
+            border-radius: 8px;
+            text-align: center;
+        }
+
+        .stat-label {
+            color: #718096;
+            font-size: 0.75em;
+            margin-bottom: 4px;
+        }
+
+        .stat-value {
+            color: #2d3748;
+            font-size: 1.2em;
+            font-weight: bold;
+        }
+
+        .portfolio-summary {
+            background: white;
+            padding: 10px 15px;
+            border-radius: 12px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+            margin-bottom: 12px;
+        }
+
+        .panel-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .panel-title {
+            color: #2d3748;
+            font-size: 1.3em;
+            font-weight: 600;
+            margin: 0;
+            padding-left: 8px;
+        }
+
+        .panel-content {
+            margin-top: 10px;
+            display: grid;
+            grid-template-rows: 1fr;
+            opacity: 1;
+            transition: grid-template-rows 0.2s ease, opacity 0.2s ease, margin-top 0.2s ease;
+        }
+
+        .panel-content-inner {
+            overflow: hidden;
+        }
+
+        .panel-toggle {
+            border: none;
+            background: #edf2f7;
+            color: #4a5568;
+            width: 30px;
+            height: 30px;
+            border-radius: 999px;
+            cursor: pointer;
+            font-size: 0.95em;
+            line-height: 1;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            transition: background 0.2s ease, color 0.2s ease;
+        }
+
+        .panel-toggle:hover {
+            background: #e2e8f0;
+            color: #2d3748;
+        }
+
+        .panel-caret {
+            display: inline-block;
+            transition: transform 0.2s ease;
+        }
+
+        .panel.collapsed .panel-content {
+            grid-template-rows: 0fr;
+            opacity: 0;
+            margin-top: 0;
+            pointer-events: none;
+        }
+
+        .panel.collapsed .panel-caret {
+            transform: rotate(-90deg);
+        }
+
+        .summary-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 14px;
+            margin-bottom: 10px;
+            position: relative;
+            min-height: 34px;
+        }
+
+        #portfolio-header {
+            background: #1098c9;
+            padding: 0 15px;
+        }
+
+        #portfolio-header .summary-header {
+            margin-bottom: 0;
+            min-height: 56px;
+        }
+
+        #portfolio-header h2 {
+            color: #ffffff;
+            margin: 0;
+        }
+
+        .summary-title-wrap {
+            position: absolute;
+            left: 50%;
+            transform: translateX(-50%);
+            min-width: 0;
+            width: max-content;
+            text-align: center;
+            pointer-events: none;
+        }
+
+        .portfolio-summary h2 {
+            color: #2d3748;
+            font-size: 1.6em;
+            margin-bottom: 4px;
+        }
+
+        .summary-controls {
+            display: none;
+            align-items: flex-end;
+            margin-left: auto;
+            margin-right: 40px;
+        }
+
+        .summary-actions {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+            justify-content: flex-end;
+        }
+
+        .summary-actions .upload-btn,
+        .summary-actions .purge-btn {
+            padding: 6px 10px;
+            font-size: 0.75em;
+            border-radius: 5px;
+            box-shadow: 0 3px 8px rgba(0, 0, 0, 0.15);
+        }
+
+        .summary-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+            gap: 12px;
+        }
+
+        #cash-summary-grid {
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+        }
+
+        .summary-table {
+            width: 100%;
+            border-collapse: separate;
+            border-spacing: 12px 10px;
+            table-layout: fixed;
+        }
+
+        .summary-table td {
+            text-align: center;
+            padding: 14px 16px;
+            background: #ffffff;
+            border: none;
+            border-radius: 10px;
+            vertical-align: top;
+            box-shadow: none;
+        }
+
+        .summary-table td > div:first-child {
+            /* Ensure label wrapper is always at top */
+        }
+
+        .summary-table td.empty-cell {
+            background: none;
+            border: none;
+            box-shadow: none;
+        }
+
+        .summary-breakdown {
+            font-size: 0.92em;
+            line-height: 1.75;
+            font-weight: 600;
+        }
+
+        .summary-breakdown .movement-line {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 18px;
+            white-space: nowrap;
+        }
+
+        .summary-breakdown .deposit-line {
+            color: #48bb78;
+        }
+
+        .summary-breakdown .withdrawal-line {
+            color: #fc8181;
+        }
+
+        .summary-breakdown .net-line {
+            font-weight: 700;
+            color: #2d3748;
+            border-top: 1px solid #cbd5e0;
+            padding-top: 2px;
+            margin-top: 2px;
+        }
+
+        .summary-calc-line {
+            font-size: 0.78em;
+            line-height: 1.35;
+            font-weight: 600;
+        }
+
+        .summary-calc-line.deposit {
+            color: #48bb78;
+        }
+
+        .summary-calc-line.withdrawal {
+            color: #fc8181;
+        }
+
+        /* Custom Modal Styles */
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.7);
+            backdrop-filter: blur(4px);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 10000;
+            animation: fadeIn 0.2s ease;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+
+        @keyframes slideIn {
+            from {
+                opacity: 0;
+                transform: translateY(-20px) scale(0.95);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0) scale(1);
+            }
+        }
+
+        .modal-content {
+            background: white;
+            border-radius: 12px;
+            padding: 32px;
+            max-width: 500px;
+            width: 90%;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+            animation: slideIn 0.3s ease;
+        }
+
+        .modal-header {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            margin-bottom: 20px;
+        }
+
+        .modal-icon {
+            font-size: 48px;
+            line-height: 1;
+        }
+
+        .modal-title {
+            font-size: 24px;
+            font-weight: 700;
+            color: #2d3748;
+            margin: 0;
+        }
+
+        .modal-message {
+            color: #4a5568;
+            font-size: 16px;
+            line-height: 1.6;
+            margin-bottom: 24px;
+        }
+
+        .modal-message ul {
+            margin: 12px 0;
+            padding-left: 20px;
+        }
+
+        .modal-message li {
+            margin: 8px 0;
+        }
+
+        .modal-actions {
+            display: flex;
+            gap: 12px;
+            justify-content: flex-end;
+        }
+
+        .modal-btn {
+            padding: 12px 24px;
+            border-radius: 8px;
+            font-size: 15px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            border: none;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+        }
+
+        .modal-btn-cancel {
+            background: #e2e8f0;
+            color: #4a5568;
+        }
+
+        .modal-btn-cancel:hover {
+            background: #cbd5e0;
+            transform: translateY(-1px);
+            box-shadow: 0 6px 16px rgba(0, 0, 0, 0.15);
+        }
+
+        .modal-btn-danger {
+            background: linear-gradient(135deg, #f56565 0%, #c53030 100%);
+            color: white;
+        }
+
+        .modal-btn-danger:hover {
+            background: linear-gradient(135deg, #fc8181 0%, #e53e3e 100%);
+            transform: translateY(-1px);
+            box-shadow: 0 6px 16px rgba(245, 101, 101, 0.4);
+        }
+
+        .summary-label {
+            color: #718096;
+            font-size: 0.72em;
+            margin-bottom: 6px;
+            text-transform: uppercase;
+            letter-spacing: 0.6px;
+            font-weight: 700;
+            height: 18px;
+            line-height: 18px;
+        }
+
+        .summary-value {
+            color: #2d3748;
+            font-size: 1.35em;
+            font-weight: bold;
+        }
+
+        .summary-value.positive {
+            color: #48bb78;
+        }
+
+        .summary-value.negative {
+            color: #fc8181;
+        }
+
+        /* Server offline styles */
+        .server-offline-banner {
+            background: linear-gradient(135deg, #f56565 0%, #c53030 100%);
+            color: white;
+            padding: 20px;
+            border-radius: 12px;
+            margin-bottom: 20px;
+            text-align: center;
+            box-shadow: 0 4px 12px rgba(245, 101, 101, 0.3);
+        }
+
+        .server-offline-banner h2 {
+            margin: 0 0 10px 0;
+            font-size: 1.4em;
+        }
+
+        .server-offline-banner p {
+            margin: 0;
+            opacity: 0.9;
+        }
+
+        .server-offline-banner code {
+            background: rgba(255, 255, 255, 0.2);
+            padding: 2px 8px;
+            border-radius: 4px;
+            font-family: monospace;
+        }
+
+        /* Disabled button styles */
+        .upload-btn:disabled,
+        .purge-btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+            transform: none !important;
+            box-shadow: none !important;
+        }
+
+        .upload-btn:disabled:hover,
+        .purge-btn:disabled:hover {
+            transform: none !important;
+            box-shadow: none !important;
+        }
+
+        /* Settings gear icon (hidden on desktop) */
+        .settings-gear {
+            display: block;
+            background: none;
+            border: none;
+            cursor: pointer;
+            padding: 6px;
+            border-radius: 8px;
+            transition: background 0.2s;
+            line-height: 1;
+            position: absolute;
+            right: 0;
+            top: 50%;
+            transform: translateY(-50%);
+        }
+
+        .settings-gear:hover {
+            background: rgba(0,0,0,0.05);
+        }
+
+        .settings-gear svg {
+            width: 22px;
+            height: 22px;
+            fill: #718096;
+            transition: fill 0.2s;
+        }
+
+        .settings-gear:hover svg {
+            fill: #4a5568;
+        }
+
+        #portfolio-header .settings-gear svg {
+            fill: #ffffff;
+        }
+
+        #portfolio-header .settings-gear:hover {
+            background: rgba(255, 255, 255, 0.18);
+        }
+
+        #portfolio-header .settings-gear:hover svg {
+            fill: #ffffff;
+        }
+
+        /* Settings popup */
+        .settings-popup-overlay {
+            position: fixed;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background: rgba(0,0,0,0.5);
+            backdrop-filter: blur(3px);
+            z-index: 9999;
+            display: flex;
+            align-items: flex-start;
+            justify-content: center;
+            padding-top: 80px;
+            animation: fadeIn 0.15s ease;
+        }
+
+        .settings-popup {
+            background: white;
+            border-radius: 14px;
+            padding: 20px;
+            width: 90%;
+            max-width: 340px;
+            box-shadow: 0 12px 40px rgba(0,0,0,0.25);
+            animation: slideIn 0.2s ease;
+        }
+
+        .settings-popup h3 {
+            margin: 0 0 16px 0;
+            font-size: 1.1em;
+            color: #2d3748;
+        }
+
+        .settings-popup .settings-actions {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        .settings-popup .settings-actions .upload-btn,
+        .settings-popup .settings-actions .purge-btn {
+            width: 100%;
+            padding: 12px 16px;
+            font-size: 0.9em;
+            text-align: center;
+        }
+
+        .settings-popup-close {
+            display: none;
+        }
+
+        @media (max-width: 900px) {
+            .summary-controls {
+                width: 100%;
+                align-items: flex-start;
+                margin-right: 0;
+            }
+
+            .summary-actions {
+                justify-content: flex-start;
+            }
+
+            .summary-header {
+                min-height: 40px;
+            }
+
+        }
+
+        @media (max-width: 600px) {
+            body {
+                padding: 0;
+                background: white;
+            }
+
+            .container {
+                padding: 0 6px;
+            }
+
+            .portfolio-summary {
+                padding: 8px 4px;
+                border-radius: 0;
+                box-shadow: none;
+                margin-bottom: 0;
+                border-bottom: 1px solid #e2e8f0;
+            }
+
+            #portfolio-header {
+                padding: 0 8px;
+                margin-left: -6px;
+                margin-right: -6px;
+                border-bottom: none;
+            }
+
+            #portfolio-header .summary-header {
+                min-height: 48px;
+            }
+
+            .portfolio-summary h2 {
+                font-size: 1.7em;
+            }
+
+            .summary-header {
+                flex-wrap: nowrap;
+                align-items: center;
+                min-height: 40px;
+            }
+
+            .summary-title-wrap {
+                min-width: 0;
+                width: max-content;
+            }
+
+            /* Header actions stay in popup on mobile as well */
+
+            .summary-table {
+                border-spacing: 3px 4px;
+            }
+
+            .summary-table td {
+                padding: 5px 3px;
+                border-radius: 6px;
+            }
+
+            .summary-label {
+                font-size: 0.58em;
+                margin-bottom: 2px;
+                letter-spacing: 0.3px;
+                height: auto;
+                line-height: 1.2;
+            }
+
+            .summary-value {
+                font-size: 0.95em;
+            }
+
+            .summary-subvalue {
+                font-size: 0.78em;
+            }
+
+            .summary-breakdown {
+                font-size: 0.75em;
+                line-height: 1.5;
+            }
+
+            .summary-breakdown .movement-line {
+                flex-direction: column;
+                gap: 0;
+            }
+
+            .summary-content {
+                height: auto;
+                min-height: 40px;
+            }
+
+            .chart-container {
+                padding: 10px 2px;
+                border-radius: 0;
+                box-shadow: none;
+                margin-bottom: 0;
+                border-bottom: 1px solid #e2e8f0;
+            }
+
+            .chart-title {
+                font-size: 1.5em;
+                margin-bottom: 8px;
+                padding-left: 6px;
+            }
+
+            .chart-subtitle {
+                font-size: 1.2em;
+            }
+
+            .stat-label {
+                font-size: 0.7em;
+            }
+
+            .stat-value {
+                font-size: 1.1em;
+            }
+
+            /* Hide type and description columns in cash movements table */
+            #cash-movements-table th:nth-child(2),
+            #cash-movements-table td:nth-child(2),
+            #cash-movements-table th:nth-child(3),
+            #cash-movements-table td:nth-child(3) {
+                display: none;
+            }
+
+            .tt-date-input {
+                font-size: 0.85em;
+                padding: 4px 6px;
+            }
+
+            .tt-date-picker {
+                grid-template-columns: auto 140px auto;
+                gap: 6px;
+            }
+
+            .tt-header-value {
+                font-size: 1.1em;
+            }
+
+            .tt-holdings-list .tt-holding-row {
+                padding: 8px 10px;
+            }
+        }
+
+        /* Time Travel Panel */
+        .tt-date-picker {
+            display: grid;
+            grid-template-columns: auto 160px auto;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 16px;
+            width: fit-content;
+            margin-left: auto;
+            margin-right: auto;
+        }
+
+        .tt-date-input {
+            width: 100%;
+            padding: 8px 12px;
+            border: 2px solid #e2e8f0;
+            border-radius: 8px;
+            font-size: 0.95em;
+            font-family: inherit;
+            color: #2d3748;
+            transition: border-color 0.2s;
+            background: white;
+        }
+
+        .tt-date-input:focus {
+            outline: none;
+            border-color: #667eea;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.15);
+        }
+
+        .tt-nav-btn {
+            background: #edf2f7;
+            border: none;
+            padding: 8px 12px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 0.9em;
+            font-weight: 600;
+            color: #4a5568;
+            transition: all 0.2s;
+            white-space: nowrap;
+        }
+
+        .tt-nav-btn:hover {
+            background: #e2e8f0;
+            color: #2d3748;
+        }
+
+        .tt-header {
+            background: white;
+            padding: 0;
+            margin-bottom: 16px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            text-align: center;
+            gap: 4px;
+        }
+
+        .tt-header-value {
+            font-size: 1.6em;
+            font-weight: 700;
+            color: #2d3748;
+        }
+
+        .tt-header-change {
+            font-size: 0.95em;
+            font-weight: 600;
+        }
+
+        .tt-header-change.positive {
+            color: #48bb78;
+        }
+
+        .tt-header-change.negative {
+            color: #fc8181;
+        }
+
+        .tt-section-title {
+            font-size: 0.85em;
+            font-weight: 700;
+            color: #718096;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            padding: 10px 0 6px 0;
+            border-bottom: 1px solid #e2e8f0;
+            margin-bottom: 0;
+        }
+
+        .tt-sort-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 6px 0;
+            font-size: 0.75em;
+            color: #a0aec0;
+            font-weight: 600;
+        }
+
+        .tt-holdings-list {
+            max-height: 600px;
+            overflow-y: auto;
+        }
+
+        .tt-holding-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            padding: 12px 0;
+            border-bottom: 1px solid #f0f0f0;
+            gap: 12px;
+        }
+
+        .tt-holding-row:last-child {
+            border-bottom: none;
+        }
+
+        .tt-holding-left {
+            flex: 1;
+            min-width: 0;
+        }
+
+        .tt-holding-name {
+            font-weight: 600;
+            color: #2d3748;
+            font-size: 0.95em;
+            line-height: 1.3;
+        }
+
+        .tt-holding-meta {
+            font-size: 0.78em;
+            color: #a0aec0;
+            margin-top: 2px;
+        }
+
+        .tt-holding-right {
+            text-align: right;
+            flex-shrink: 0;
+        }
+
+        .tt-holding-value {
+            font-weight: 700;
+            color: #2d3748;
+            font-size: 0.95em;
+        }
+
+        .tt-holding-change {
+            font-size: 0.8em;
+            font-weight: 600;
+            margin-top: 2px;
+        }
+
+        .tt-holding-change.positive { color: #48bb78; }
+        .tt-holding-change.negative { color: #fc8181; }
+
+        .tt-empty {
+            text-align: center;
+            padding: 30px;
+            color: #a0aec0;
+            font-size: 0.95em;
+        }
+
+        .tt-loading {
+            text-align: center;
+            padding: 20px;
+            color: #718096;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- Server Offline Banner (hidden by default) -->
+        <div id="server-offline-banner" class="server-offline-banner" style="display: none;">
+            <h2>⚠️ Server Not Running</h2>
+            <p>The DEGIRO Portfolio server is not responding. Please start the server:</p>
+            <p style="margin-top: 10px;"><code>./degiro_portfolio start</code> or <code>degiro_portfolio start</code></p>
+        </div>
+
+        <div id="upload-status" class="upload-status"></div>
+
+        <div id="upload-progress" class="upload-progress-container">
+            <div class="upload-progress-message" id="upload-progress-message">
+                📤 Uploading transactions...
+            </div>
+            <div class="progress-bar-background">
+                <div class="progress-bar-fill" id="progress-bar-fill" style="width: 0%"></div>
+            </div>
+        </div>
+
+        <div id="loading" class="loading"><span id="loading-status">Loading summary...</span></div>
+        <div id="error" class="error" style="display: none;"></div>
+
+        <div id="portfolio-header" class="portfolio-summary" style="display: none;">
+            <div class="summary-header">
+                <div class="summary-title-wrap">
+                    <h2>DEGIRO Portfolio</h2>
+                </div>
+                <div class="summary-controls">
+                    <div class="summary-actions">
+                        <input type="file" id="file-input" accept=".xlsx,.xls" />
+                        <button class="upload-btn upload-btn-green" onclick="document.getElementById('file-input').click()">
+                            Upload transactions
+                        </button>
+                        <input type="file" id="account-file-input" accept=".xlsx,.xls" />
+                        <button class="upload-btn upload-btn-green" onclick="document.getElementById('account-file-input').click()">
+                            Upload account statement
+                        </button>
+                        <button class="upload-btn" onclick="updateMarketData()">
+                            Update market data
+                        </button>
+                        <button id="purge-btn" class="purge-btn" onclick="purgeDatabase()">
+                            Purge all data
+                        </button>
+                    </div>
+                </div>
+                <button class="settings-gear" onclick="openSettingsPopup()" aria-label="Settings">
+                    <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M19.14 12.94c.04-.3.06-.61.06-.94 0-.32-.02-.64-.07-.94l2.03-1.58a.49.49 0 0 0 .12-.61l-1.92-3.32a.49.49 0 0 0-.59-.22l-2.39.96c-.5-.38-1.03-.7-1.62-.94l-.36-2.54a.484.484 0 0 0-.48-.41h-3.84c-.24 0-.43.17-.47.41l-.36 2.54c-.59.24-1.13.57-1.62.94l-2.39-.96a.49.49 0 0 0-.59.22L2.74 8.87c-.12.21-.08.47.12.61l2.03 1.58c-.05.3-.07.63-.07.94s.02.64.07.94l-2.03 1.58a.49.49 0 0 0-.12.61l1.92 3.32c.12.22.37.29.59.22l2.39-.96c.5.38 1.03.7 1.62.94l.36 2.54c.05.24.24.41.48.41h3.84c.24 0 .44-.17.47-.41l.36-2.54c.59-.24 1.13-.56 1.62-.94l2.39.96c.22.08.47 0 .59-.22l1.92-3.32c.12-.22.07-.47-.12-.61l-2.01-1.58zM12 15.6A3.6 3.6 0 1 1 12 8.4a3.6 3.6 0 0 1 0 7.2z"/></svg>
+                </button>
+            </div>
+        </div>
+
+        <div id="portfolio-summary" class="portfolio-summary panel" style="display: none;">
+            <div class="panel-header">
+                <h3 class="panel-title">Summary</h3>
+                <button class="panel-toggle" type="button" aria-label="Toggle Summary" aria-expanded="true" onclick="togglePanel(this)">
+                    <span class="panel-caret">▾</span>
+                </button>
+            </div>
+            <div class="panel-content">
+                <div class="panel-content-inner">
+                    <div id="summary-grid"></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Portfolio Valuation Chart -->
+        <div id="portfolio-chart-section" class="portfolio-summary panel" style="display: none;">
+            <div class="panel-header">
+                <h3 class="panel-title">History</h3>
+                <button class="panel-toggle" type="button" aria-label="Toggle History" aria-expanded="true" onclick="togglePanel(this)">
+                    <span class="panel-caret">▾</span>
+                </button>
+            </div>
+            <div class="panel-content">
+                <div class="panel-content-inner">
+                    <div class="tt-date-picker">
+                        <button class="tt-nav-btn" onclick="ttShiftDate(-1)">◀ Prev</button>
+                        <input type="date" id="tt-date" class="tt-date-input" />
+                        <button class="tt-nav-btn" onclick="ttShiftDate(1)">Next ▶</button>
+                    </div>
+                    <div id="portfolio-valuation-chart"></div>
+                    <div id="tt-content"></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Cash Movements Section -->
+        <div id="cash-movements-section" class="portfolio-summary panel" style="display: none;">
+            <div class="panel-header">
+                <h3 class="panel-title">Deposits</h3>
+                <button class="panel-toggle" type="button" aria-label="Toggle Deposits" aria-expanded="true" onclick="togglePanel(this)">
+                    <span class="panel-caret">▾</span>
+                </button>
+            </div>
+            <div class="panel-content">
+                <div class="panel-content-inner">
+                    <div class="summary-grid" id="cash-summary-grid" style="margin-bottom: 15px;"></div>
+                    <div style="max-height: 400px; overflow-y: auto;">
+                        <table id="cash-movements-table" style="width: 100%; border-collapse: collapse; font-size: 0.85em;">
+                            <thead>
+                                <tr style="background: #f7fafc; position: sticky; top: 0;">
+                                    <th style="padding: 8px 12px; text-align: left; border-bottom: 2px solid #e2e8f0; color: #4a5568;">Date</th>
+                                    <th style="padding: 8px 12px; text-align: left; border-bottom: 2px solid #e2e8f0; color: #4a5568;">Type</th>
+                                    <th style="padding: 8px 12px; text-align: left; border-bottom: 2px solid #e2e8f0; color: #4a5568;">Description</th>
+                                    <th style="padding: 8px 12px; text-align: right; border-bottom: 2px solid #e2e8f0; color: #4a5568;">Amount</th>
+                                    <th style="padding: 8px 12px; text-align: right; border-bottom: 2px solid #e2e8f0; color: #4a5568;">Balance</th>
+                                </tr>
+                            </thead>
+                            <tbody id="cash-movements-body"></tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+    </div>
+
+    <!-- Settings Popup (populated by JS) -->
+    <div id="settings-popup-container"></div>
+
+    <script>
+        let holdings = [];
+        let selectedStockId = null;
+        let chartRefreshInterval = null;
+        let serverOnline = null;  // null = unknown, true = online, false = offline
+        let failureCount = 0;     // Track consecutive failures
+        const FAILURE_THRESHOLD = 3;  // Require 3 consecutive failures before marking offline
+        let uploadInProgress = false;  // Skip server checks during uploads
+        // Settings popup
+        function openSettingsPopup() {
+            const container = document.getElementById('settings-popup-container');
+            container.innerHTML = `
+                <div class="settings-popup-overlay" onclick="closeSettingsPopup(event)">
+                    <div class="settings-popup" onclick="event.stopPropagation()">
+                        <h3>Settings</h3>
+                        <div class="settings-actions">
+                            <button class="upload-btn upload-btn-green" onclick="closeSettingsPopup(); document.getElementById('file-input').click();">
+                                Upload transactions
+                            </button>
+                            <button class="upload-btn upload-btn-green" onclick="closeSettingsPopup(); document.getElementById('account-file-input').click();">
+                                Upload account statement
+                            </button>
+                            <button class="upload-btn" onclick="closeSettingsPopup(); updateMarketData();">
+                                Update market data
+                            </button>
+                            <button class="purge-btn" onclick="closeSettingsPopup(); purgeDatabase();">
+                                Purge all data
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            `;
+        }
+
+        function closeSettingsPopup(event) {
+            if (event && !event.target.classList.contains('settings-popup-overlay')) return;
+            document.getElementById('settings-popup-container').innerHTML = '';
+        }
+
+        function togglePanel(button) {
+            const panel = button.closest('.panel');
+            if (!panel) return;
+
+            panel.classList.toggle('collapsed');
+            const expanded = !panel.classList.contains('collapsed');
+            button.setAttribute('aria-expanded', expanded ? 'true' : 'false');
+        }
+
+        // Server connectivity check
+        let serverCheckInterval = null;
+
+        async function checkServerStatus() {
+            // Skip automatic checks during uploads to prevent false offline detection
+            if (uploadInProgress) {
+                return serverOnline !== false;  // Return current status
+            }
+
+            const serverUrl = window.location.origin;
+            const urlDisplay = document.getElementById('server-url');
+            const statusIndicator = document.getElementById('server-status-indicator');
+            const offlineBanner = document.getElementById('server-offline-banner');
+
+            if (urlDisplay) {
+                urlDisplay.textContent = serverUrl + ' ';
+            }
+
+            try {
+                const controller = new AbortController();
+                const timeoutId = setTimeout(() => controller.abort(), 10000);  // 10 second timeout
+
+                const response = await fetch('/api/ping', { signal: controller.signal });
+                clearTimeout(timeoutId);
+
+                if (response.ok) {
+                    const data = await response.json();
+
+                    // Reset failure count on success
+                    failureCount = 0;
+
+                    // Check if server was previously offline (not initial load)
+                    const wasOffline = serverOnline === false;
+                    serverOnline = true;
+
+                    // Show server status with uptime
+                    if (statusIndicator) {
+                        statusIndicator.innerHTML = `<span style="color: #48bb78;">● Online</span> <span style="color: #a0aec0; font-size: 0.9em;">(uptime: ${data.uptime})</span>`;
+                    }
+                    offlineBanner.style.display = 'none';
+                    setButtonsEnabled(true);
+
+                    // If server came back online after being offline, reload the page
+                    if (wasOffline) {
+                        window.location.reload();
+                    }
+                    return true;
+                } else {
+                    throw new Error('Server returned error');
+                }
+            } catch (error) {
+                // Increment failure count
+                failureCount++;
+
+                // Only mark as offline after multiple consecutive failures
+                if (failureCount >= FAILURE_THRESHOLD) {
+                    serverOnline = false;
+                    if (statusIndicator) {
+                        statusIndicator.innerHTML = '<span style="color: #fc8181;">● Offline</span>';
+                    }
+                    offlineBanner.style.display = 'block';
+                    setButtonsEnabled(false);
+                    document.getElementById('loading').style.display = 'none';
+
+                    // Hide visible panels when offline
+                    const hideIfExists = (id) => {
+                        const el = document.getElementById(id);
+                        if (el) el.style.display = 'none';
+                    };
+                    hideIfExists('portfolio-summary');
+                    hideIfExists('portfolio-header');
+                    hideIfExists('portfolio-chart-section');
+                    hideIfExists('cash-movements-section');
+                }
+
+                return false;
+            }
+        }
+
+        function setButtonsEnabled(enabled) {
+            const buttons = document.querySelectorAll('.upload-btn, .purge-btn');
+            buttons.forEach(btn => {
+                btn.disabled = !enabled;
+            });
+        }
+
+        async function updatePurgeButtonState() {
+            const purgeBtn = document.getElementById('purge-btn');
+            if (!purgeBtn) return;
+
+            try {
+                const response = await fetch('/api/portfolio-summary');
+                const summary = await response.json();
+                const hasData =
+                    (summary.total_holdings || 0) > 0 ||
+                    (summary.total_deposited || 0) > 0 ||
+                    (summary.total_withdrawals || 0) > 0;
+                purgeBtn.disabled = !hasData;
+            } catch {
+                // Keep purge safe if summary cannot be fetched.
+                purgeBtn.disabled = true;
+            }
+        }
+
+        // Start continuous server monitoring
+        function startServerMonitoring() {
+            // Check every 5 seconds
+            if (serverCheckInterval) {
+                clearInterval(serverCheckInterval);
+            }
+            serverCheckInterval = setInterval(checkServerStatus, 5000);
+        }
+
+        // Currency utility functions
+        function getCurrencySymbol(currency) {
+            const symbols = {
+                'USD': '$',
+                'EUR': '€',
+                'GBP': '£',
+                'JPY': '¥',
+                'SEK': 'SEK',
+                'NOK': 'NOK',
+                'DKK': 'DKK',
+                'CHF': 'CHF',
+                'CAD': 'C$',
+                'AUD': 'A$'
+            };
+            return symbols[currency] || currency;
+        }
+
+        function formatPrice(price, currency) {
+            if (price === null || price === undefined) return '—';
+            const symbol = getCurrencySymbol(currency);
+            const formattedNumber = price.toLocaleString('en-US', {
+                minimumFractionDigits: 2,
+                maximumFractionDigits: 2
+            });
+            // Symbol-first currencies
+            if (['$', '€', '£', '¥', 'C$', 'A$'].includes(symbol)) {
+                return `${symbol}${formattedNumber}`;
+            } else {
+                // Code-after currencies (SEK, NOK, DKK, CHF, etc.)
+                return `${formattedNumber} ${symbol}`;
+            }
+        }
+
+        // Load portfolio summary
+        // Currency conversion rates (fetched from API)
+        let exchangeRates = {
+            'EUR': 1.0,
+            'USD': null,
+            'SEK': null,
+            'GBP': null
+        };
+
+        async function fetchExchangeRates() {
+            try {
+                // Add timeout to prevent hanging during tests
+                const controller = new AbortController();
+                const timeoutId = setTimeout(() => controller.abort(), 5000);  // 5 second timeout
+
+                const response = await fetch('/api/exchange-rates', { signal: controller.signal });
+                clearTimeout(timeoutId);
+
+                const data = await response.json();
+                if (data.success) {
+                    exchangeRates = {...exchangeRates, ...data.rates};
+                }
+            } catch (error) {
+                console.error('Failed to fetch exchange rates:', error);
+                // Use default rates if fetch fails
+            }
+        }
+
+        async function loadPortfolioSummary() {
+            try {
+                const response = await fetch('/api/portfolio-summary');
+                const summary = await response.json();
+
+                const fmt = (v) => Math.abs(v).toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2});
+                const sign = (v) => v >= 0 ? '+' : '';
+                const cls = (v) => v >= 0 ? 'positive' : 'negative';
+
+                const pct = (v) => v.toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2});
+
+                const summaryHtml = `
+                    <table class="summary-table">
+                        <tr>
+                            <td>
+                                <div class="summary-label">Current Value</div>
+                                <div class="summary-content">
+                                    <div class="summary-value">€${fmt(summary.current_value)}</div>
+                                </div>
+                            </td>
+                            <td>
+                                <div class="summary-label">Currently Invested</div>
+                                <div class="summary-content">
+                                    <div class="summary-value">€${fmt(summary.net_invested)}</div>
+                                </div>
+                            </td>
+                            <td>
+                                <div class="summary-label">Deposits</div>
+                                <div class="summary-content">
+                                    <div>
+                                        <div class="summary-value">€${fmt(summary.net_deposited)}</div>
+                                        <div class="summary-calc-line deposit">+ €${fmt(summary.total_deposited)}</div>
+                                        <div class="summary-calc-line withdrawal">− €${fmt(summary.total_withdrawals)}</div>
+                                    </div>
+                                </div>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td class="empty-cell"></td>
+                            <td>
+                                <div class="summary-label">Current Profit/Loss</div>
+                                <div class="summary-content">
+                                    <div class="summary-value ${cls(summary.gain_loss)}">
+                                        ${sign(summary.gain_loss)}€${fmt(summary.gain_loss)}
+                                        <div class="summary-subvalue">${sign(summary.gain_loss_percent)}${pct(summary.gain_loss_percent)}%</div>
+                                    </div>
+                                </div>
+                            </td>
+                            <td>
+                                <div class="summary-label">Total Profit/Loss</div>
+                                <div class="summary-content">
+                                    <div class="summary-value ${cls(summary.total_profit_loss)}">
+                                        ${sign(summary.total_profit_loss)}€${fmt(summary.total_profit_loss)}
+                                        <div class="summary-subvalue">${sign(summary.total_profit_loss_percent)}${pct(summary.total_profit_loss_percent)}%</div>
+                                    </div>
+                                </div>
+                            </td>
+                        </tr>
+                    </table>
+                `;
+
+                document.getElementById('summary-grid').innerHTML = summaryHtml;
+                document.getElementById('portfolio-summary').style.display = 'block';
+
+            } catch (error) {
+                console.error('Failed to load portfolio summary:', error);
+                // Check if server went offline
+                await checkServerStatus();
+            }
+        }
+
+        // Load and render portfolio valuation chart
+        async function loadPortfolioValuationChart() {
+            try {
+                const response = await fetch('/api/portfolio-valuation-history');
+                const data = await response.json();
+
+                if (data.dates.length === 0) {
+                    return; // No data to display
+                }
+
+                portfolioHistoryDates = data.dates;
+
+                // Show the chart section
+                document.getElementById('portfolio-chart-section').style.display = 'block';
+
+                // Create traces
+                const portfolioTrace = {
+                    x: data.dates,
+                    y: data.values,
+                    mode: 'lines',
+                    name: 'Portfolio Value',
+                    line: {
+                        color: '#667eea',
+                        width: 3
+                    },
+                    fill: 'tonexty',
+                    fillcolor: 'rgba(102, 126, 234, 0.1)',
+                    hovertemplate: '<b>Portfolio Value</b><br>€%{y:,.2f}<br>%{x}<extra></extra>'
+                };
+
+                const investedTrace = {
+                    x: data.dates,
+                    y: data.invested,
+                    mode: 'lines',
+                    name: 'Net Invested',
+                    line: {
+                        color: '#48bb78',
+                        width: 2,
+                        dash: 'dash'
+                    },
+                    hovertemplate: '<b>Net Invested</b><br>€%{y:,.2f}<br>%{x}<extra></extra>'
+                };
+
+                // Get the most recent date
+                const lastDate = data.dates[data.dates.length - 1];
+
+                const layout = {
+                    xaxis: {
+                        title: 'Date',
+                        type: 'date',
+                        gridcolor: '#e2e8f0'
+                    },
+                    yaxis: {
+                        title: 'Value (EUR)',
+                        gridcolor: '#e2e8f0',
+                        tickformat: ',.0f',
+                        tickprefix: '€'
+                    },
+                    hovermode: 'x unified',
+                    showlegend: true,
+                    legend: {
+                        x: 0,
+                        y: 1.15,
+                        orientation: 'h',
+                        bgcolor: 'rgba(255, 255, 255, 0.9)'
+                    },
+                    annotations: [{
+                        x: 1,
+                        y: 1.08,
+                        xref: 'paper',
+                        yref: 'paper',
+                        text: `Latest: ${lastDate}`,
+                        showarrow: false,
+                        xanchor: 'right',
+                        yanchor: 'top',
+                        bgcolor: 'rgba(102, 126, 234, 0.1)',
+                        bordercolor: '#667eea',
+                        borderwidth: 1,
+                        borderpad: 4,
+                        font: {
+                            size: 11,
+                            color: '#667eea',
+                            weight: 'bold',
+                            family: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif'
+                        }
+                    }],
+                    plot_bgcolor: '#f7fafc',
+                    paper_bgcolor: 'white',
+                    margin: window.innerWidth <= 600
+                        ? { t: 10, b: 35, l: 55, r: 10 }
+                        : { t: 10, b: 40 },
+                    font: {
+                        family: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif'
+                    }
+                };
+
+                const config = {
+                    responsive: true,
+                    displayModeBar: true,
+                    displaylogo: false,
+                    modeBarButtonsToRemove: ['lasso2d', 'select2d'],
+                    scrollZoom: false
+                };
+
+                Plotly.newPlot('portfolio-valuation-chart', [investedTrace, portfolioTrace], layout, config).then(() => {
+                    const chartEl = document.getElementById('portfolio-valuation-chart');
+                    chartEl.on('plotly_click', (ev) => {
+                        const clicked = ev?.points?.[0]?.x;
+                        if (!clicked) return;
+                        const date = String(clicked).split('T')[0];
+                        syncHistoryDate(date, 'chart');
+                    });
+
+                    if (selectedHistoryDate) {
+                        updateHistoryChartSelection(selectedHistoryDate, false);
+                    } else {
+                        selectedHistoryDate = lastDate;
+                        updateHistoryChartSelection(lastDate, false);
+                    }
+                });
+
+            } catch (error) {
+                console.error('Failed to load portfolio valuation chart:', error);
+                // Check if server went offline
+                await checkServerStatus();
+            }
+        }
+
+        // Load holdings on page load
+        async function loadHoldings() {
+            try {
+                // Fetch exchange rates and holdings in parallel
+                const [, holdingsResp] = await Promise.all([
+                    fetchExchangeRates(),
+                    fetch('/api/holdings')
+                ]);
+
+                const data = await holdingsResp.json();
+                holdings = data.holdings;
+
+                // Update purge button state based on whether there's data
+                updatePurgeButtonState();
+
+                if (holdings.length === 0) {
+                    document.getElementById('loading').innerHTML =
+                        '<div class="info-message">No current holdings found in the portfolio.</div>';
+                    return;
+                }
+
+                document.getElementById('loading').style.display = 'none';
+                document.getElementById('holdings-container').style.display = 'block';
+                renderHoldings();
+
+                // Load first stock chart (non-blocking)
+                setLoadingStatus('Loading charts...');
+                if (holdings.length > 0) {
+                    loadStockChart(holdings[0].id);
+                }
+            } catch (error) {
+                // Check if server went offline
+                const isOnline = await checkServerStatus();
+                if (!isOnline) {
+                    return; // Server offline banner will be shown
+                }
+                showError('Failed to load holdings: ' + error.message);
+            }
+        }
+
+        // Helper function to get Google Finance URL from ticker
+        function getGoogleFinanceUrl(ticker, stockExchange) {
+            if (!ticker) return null;
+
+            // Map Yahoo Finance suffixes to Google Finance exchange codes
+            const tickerSuffixMap = {
+                '.ST': 'STO',      // Stockholm
+                '.MI': 'BIT',      // Milan (Borsa Italiana)
+                '.PA': 'EPA',      // Paris (Euronext)
+                '.DE': 'FRA',      // Frankfurt/XETRA
+                '.AS': 'AMS',      // Amsterdam
+                '.L': 'LON',       // London
+                '.SW': 'VTX',      // Swiss
+            };
+
+            // Map database exchange codes to Google Finance codes
+            const dbExchangeMap = {
+                'NSY': 'NYSE',     // New York Stock Exchange
+                'NAS': 'NASDAQ',   // NASDAQ
+                'TDG': 'STO',      // Stockholm (Tradegate actually, but stocks trade on Stockholm)
+                'EAM': 'AMS',      // Amsterdam (Euronext Amsterdam)
+                'EPA': 'EPA',      // Paris (Euronext Paris)
+                'XET': 'FRA',      // Frankfurt/XETRA
+            };
+
+            // Extract base symbol and exchange
+            let symbol = ticker;
+            let exchange = 'NYSE';  // Default to NYSE
+
+            // First check if ticker has a suffix
+            for (const [suffix, gfExchange] of Object.entries(tickerSuffixMap)) {
+                if (ticker.endsWith(suffix)) {
+                    symbol = ticker.replace(suffix, '');
+                    exchange = gfExchange;
+                    return `https://www.google.com/finance/quote/${symbol}:${exchange}`;
+                }
+            }
+
+            // If no suffix, use the stock's exchange from database
+            if (stockExchange && dbExchangeMap[stockExchange]) {
+                exchange = dbExchangeMap[stockExchange];
+            } else if (!ticker.includes('.')) {
+                // Default for US stocks
+                exchange = 'NYSE';
+            }
+
+            return `https://www.google.com/finance/quote/${symbol}:${exchange}`;
+        }
+
+        // Helper function to get company website search URL
+        function getCompanySearchUrl(companyName) {
+            const searchQuery = encodeURIComponent(`${companyName} investor relations`);
+            return `https://www.google.com/search?q=${searchQuery}`;
+        }
+
+        function renderHoldings() {
+            const grid = document.getElementById('holdings-grid');
+            grid.innerHTML = holdings.map(stock => {
+                let priceInfo = '';
+                let positionValueEur = '';
+
+                if (stock.latest_price !== null && stock.latest_price !== undefined) {
+                    // Get currency symbol or code
+                    const currencyMap = {
+                        'USD': '$',
+                        'EUR': '€',
+                        'GBP': '£',
+                        'JPY': '¥',
+                        'CHF': 'CHF',
+                        'SEK': 'SEK',
+                        'NOK': 'NOK',
+                        'DKK': 'DKK'
+                    };
+                    const currency = currencyMap[stock.currency] || stock.currency;
+                    const formattedPrice = stock.latest_price.toFixed(2);
+
+                    // Format price based on whether we have a symbol or code
+                    const priceDisplay = ['$', '€', '£', '¥'].includes(currency)
+                        ? `${currency}${formattedPrice}`
+                        : `${formattedPrice} ${currency}`;
+
+                    let changeHtml = '';
+                    if (stock.price_change_pct !== null && stock.price_change_pct !== undefined) {
+                        const changeClass = stock.price_change_pct >= 0 ? 'positive' : 'negative';
+                        const changeSymbol = stock.price_change_pct >= 0 ? '▲' : '▼';
+                        changeHtml = `<span class="${changeClass}">${changeSymbol} ${Math.abs(stock.price_change_pct).toFixed(2)}%</span>`;
+                    }
+
+                    priceInfo = `<div class="stock-price">${priceDisplay} ${changeHtml}</div>`;
+
+                    // Calculate position value in EUR using current exchange rate
+                    const exchangeRate = exchangeRates[stock.currency] || 1.0;
+                    const priceInEur = stock.latest_price * exchangeRate;
+                    const valueInEur = stock.shares * priceInEur;
+                    positionValueEur = `<div class="stock-value-eur">€${valueInEur.toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2})}</div>`;
+                }
+
+                // Generate URLs
+                const companyUrl = getCompanySearchUrl(stock.name);
+                const financeUrl = stock.yahoo_ticker ? getGoogleFinanceUrl(stock.yahoo_ticker, stock.exchange) : null;
+
+                return `
+                    <div class="stock-card ${stock.id === selectedStockId ? 'active' : ''}"
+                         onclick="loadStockChart(${stock.id})">
+                        <div class="stock-name"><a href="${companyUrl}" target="_blank" onclick="event.stopPropagation()">${stock.name}</a></div>
+                        <div class="stock-symbol">${stock.symbol}</div>
+                        ${stock.yahoo_ticker && financeUrl ? `<div class="stock-ticker"><a href="${financeUrl}" target="_blank" onclick="event.stopPropagation()">${stock.yahoo_ticker}</a></div>` : stock.yahoo_ticker ? `<div class="stock-ticker">${stock.yahoo_ticker}</div>` : ''}
+                        ${stock.exchange ? `<div class="stock-exchange">${stock.exchange}</div>` : ''}
+                        <div class="stock-shares">${stock.shares} shares</div>
+                        ${priceInfo}
+                        ${positionValueEur}
+                        <div class="stock-meta">${stock.transactions_count} transactions</div>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        async function loadStockChart(stockId) {
+            // Clear any existing refresh interval
+            if (chartRefreshInterval) {
+                clearInterval(chartRefreshInterval);
+                chartRefreshInterval = null;
+            }
+
+            selectedStockId = stockId;
+            renderHoldings(); // Update active state
+
+            try {
+                const response = await fetch(`/api/stock/${stockId}/chart-data`);
+                const data = await response.json();
+
+                document.getElementById('chart-section').style.display = 'block';
+
+                // Build chart title with data source and date
+                const latestPriceDate = data.prices && data.prices.length > 0 ? data.prices[data.prices.length - 1].date : '';
+                const dataProvider = data.stock.data_provider || 'unknown';
+                const providerDisplay = dataProvider === 'twelvedata' ? 'Twelve Data' :
+                                       dataProvider === 'yahoo' ? 'Yahoo Finance' :
+                                       dataProvider === 'fmp' ? 'FMP' : dataProvider;
+
+                const titleElement = document.getElementById('chart-title');
+                titleElement.innerHTML = `${data.stock.name} (${data.stock.symbol}) <span style="font-size: 0.7em; color: #718096; font-weight: 400;">(last updated: ${latestPriceDate} from ${providerDisplay})</span>`;
+
+                // Check if we have price data
+                if (!data.prices || data.prices.length === 0) {
+                    document.getElementById('chart').innerHTML =
+                        '<div style="padding: 40px; text-align: center; color: #718096;">' +
+                        '<p style="font-size: 18px; margin-bottom: 10px;">📊 No price data available</p>' +
+                        '<p style="font-size: 14px;">Price history for this stock has not been fetched yet.</p>' +
+                        '</div>';
+                    document.getElementById('stats-grid').innerHTML = '';
+                    return;
+                }
+
+                renderChart(data);
+                renderStats(data);
+
+                // Set up auto-refresh every minute
+                chartRefreshInterval = setInterval(() => {
+                    if (selectedStockId === stockId) {
+                        loadStockChart(stockId);
+                    }
+                }, 60000); // 60000ms = 1 minute
+
+            } catch (error) {
+                // Check if server went offline
+                const isOnline = await checkServerStatus();
+                if (!isOnline) {
+                    return; // Server offline banner will be shown
+                }
+                showError('Failed to load chart data: ' + error.message);
+            }
+        }
+
+        function renderStats(data) {
+            const prices = data.prices.filter(p => p.close !== null);
+            if (prices.length === 0) return;
+
+            // Use actual price currency from exchange data, not DEGIRO transaction currency
+            const currency = prices.length > 0 && prices[0].currency
+                ? prices[0].currency
+                : data.stock.currency;
+            const latestPrice = prices[prices.length - 1].close;
+
+            // Find the first purchase date of CURRENT holdings
+            // Track running shares to find when current position was started
+            let oldestPrice = prices[0].close;
+            let runningShares = 0;
+            let firstPurchaseOfCurrentBatch = null;
+
+            for (const t of data.transactions) {
+                runningShares += t.quantity;
+
+                // Reset when sold out completely
+                if (runningShares === 0 && t.quantity < 0) {
+                    firstPurchaseOfCurrentBatch = null;
+                }
+                // Track first purchase when starting to accumulate
+                else if (!firstPurchaseOfCurrentBatch && t.quantity > 0 && runningShares > 0) {
+                    firstPurchaseOfCurrentBatch = t;
+                }
+            }
+
+            if (firstPurchaseOfCurrentBatch) {
+                // Find the price on or after the first purchase of current holdings
+                const purchasePrice = prices.find(p => p.date >= firstPurchaseOfCurrentBatch.date);
+                if (purchasePrice) {
+                    oldestPrice = purchasePrice.close;
+                }
+            }
+
+            const priceChange = latestPrice - oldestPrice;
+            const priceChangePercent = ((priceChange / oldestPrice) * 100).toFixed(2);
+
+            const highPrice = Math.max(...prices.map(p => p.high));
+            const lowPrice = Math.min(...prices.map(p => p.low));
+
+            const totalShares = data.transactions.length > 0 ?
+                data.transactions[data.transactions.length - 1].shares : 0;
+
+            const statsHtml = `
+                <div class="stat-box">
+                    <div class="stat-label">Current Price</div>
+                    <div class="stat-value">${formatPrice(latestPrice, currency)}</div>
+                </div>
+                <div class="stat-box">
+                    <div class="stat-label">Change Since First Purchase</div>
+                    <div class="stat-value" style="color: ${priceChange >= 0 ? '#48bb78' : '#fc8181'}">
+                        ${priceChange >= 0 ? '+' : ''}${formatPrice(Math.abs(priceChange), currency)} (${priceChangePercent}%)
+                    </div>
+                </div>
+                <div class="stat-box">
+                    <div class="stat-label">Period High</div>
+                    <div class="stat-value">${formatPrice(highPrice, currency)}</div>
+                </div>
+                <div class="stat-box">
+                    <div class="stat-label">Period Low</div>
+                    <div class="stat-value">${formatPrice(lowPrice, currency)}</div>
+                </div>
+                <div class="stat-box">
+                    <div class="stat-label">Current Holdings</div>
+                    <div class="stat-value">${totalShares} shares</div>
+                </div>
+                <div class="stat-box">
+                    <div class="stat-label">Position Value</div>
+                    <div class="stat-value">${formatPrice(latestPrice * totalShares, currency)}</div>
+                </div>
+            `;
+
+            document.getElementById('stats-grid').innerHTML = statsHtml;
+        }
+
+        function renderChart(data) {
+            // Filter out price records with null values
+            const validPrices = data.prices.filter(p => p.close !== null);
+            if (validPrices.length === 0) {
+                document.getElementById('chart-area').innerHTML = '<p style="text-align: center; color: #718096; padding: 40px;">No price data available for this stock yet. Click "Update Market Data" to fetch prices.</p>';
+                return;
+            }
+
+            // Use actual price currency from exchange data, not DEGIRO transaction currency
+            const currency = validPrices.length > 0 && validPrices[0].currency
+                ? validPrices[0].currency
+                : data.stock.currency;
+            const latestPrice = validPrices[validPrices.length - 1].close;
+            const dates = validPrices.map(p => p.date);
+            const closePrices = validPrices.map(p => p.close);
+            const openPrices = validPrices.map(p => p.open);
+            const highPrices = validPrices.map(p => p.high);
+            const lowPrices = validPrices.map(p => p.low);
+
+            // ========================================
+            // CHART 1: Price Chart (Candlestick)
+            // ========================================
+
+            // Main price trace (candlestick)
+            const priceTrace = {
+                x: dates,
+                close: closePrices,
+                open: openPrices,
+                high: highPrices,
+                low: lowPrices,
+                type: 'candlestick',
+                name: 'Price',
+                increasing: { line: { color: '#48bb78' } },
+                decreasing: { line: { color: '#fc8181' } }
+            };
+
+            // Buy transactions - only show those in the same currency as price data
+            // Position markers at the low price of the candlestick for that date to ensure alignment
+            const buyTransactions = data.transactions.filter(t =>
+                t.transaction_type === 'buy' && t.currency === currency
+            );
+
+            const buyTrace = {
+                x: buyTransactions.map(t => t.date),
+                y: buyTransactions.map(t => {
+                    // Find the price data for this transaction date
+                    const priceData = data.prices.find(p => p.date === t.date);
+                    // Position marker at the low of the candlestick, or use transaction price as fallback
+                    return priceData ? priceData.low : t.price;
+                }),
+                mode: 'markers',
+                name: 'Buy',
+                yaxis: 'y',
+                marker: {
+                    color: '#48bb78',
+                    size: 14,
+                    symbol: 'triangle-up',
+                    line: { color: 'white', width: 2 },
+                    opacity: 0.9
+                },
+                text: buyTransactions.map(t => `Buy ${t.quantity} shares @ ${formatPrice(t.price, t.currency)}`),
+                hoverinfo: 'text'
+            };
+
+            // Sell transactions - only show those in the same currency as price data
+            // Position markers at the high price of the candlestick for that date to ensure alignment
+            const sellTransactions = data.transactions.filter(t =>
+                t.transaction_type === 'sell' && t.currency === currency
+            );
+
+            const sellTrace = {
+                x: sellTransactions.map(t => t.date),
+                y: sellTransactions.map(t => {
+                    // Find the price data for this transaction date
+                    const priceData = data.prices.find(p => p.date === t.date);
+                    // Position marker at the high of the candlestick, or use transaction price as fallback
+                    return priceData ? priceData.high : t.price;
+                }),
+                mode: 'markers',
+                name: 'Sell',
+                yaxis: 'y',
+                marker: {
+                    color: '#fc8181',
+                    size: 14,
+                    symbol: 'triangle-down',
+                    line: { color: 'white', width: 2 },
+                    opacity: 0.9
+                },
+                text: sellTransactions.map(t => `Sell ${t.quantity} shares @ ${formatPrice(t.price, t.currency)}`),
+                hoverinfo: 'text'
+            };
+
+            const priceTraces = [priceTrace, buyTrace];
+            if (sellTransactions.length > 0) {
+                priceTraces.push(sellTrace);
+            }
+
+            const priceLayout = {
+                title: '',
+                xaxis: {
+                    title: '',
+                    rangeslider: { visible: false },
+                    type: 'date'
+                },
+                yaxis: {
+                    title: `Price (${currency})`,
+                    fixedrange: false,
+                    autorange: true
+                },
+                hovermode: 'x unified',
+                showlegend: true,
+                legend: {
+                    x: 0,
+                    y: 1.1,
+                    orientation: 'h',
+                    bgcolor: 'rgba(255, 255, 255, 0.9)'
+                },
+                plot_bgcolor: '#f7fafc',
+                paper_bgcolor: 'white',
+                margin: { b: 40, t: 10 },
+                font: {
+                    family: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Oxygen, Ubuntu, Cantarell, sans-serif'
+                }
+            };
+
+            const config = {
+                responsive: true,
+                displayModeBar: true,
+                displaylogo: false,
+                modeBarButtonsToRemove: ['lasso2d', 'select2d'],
+                scrollZoom: false
+            };
+
+            // Plotly.newPlot returns a promise
+            Plotly.newPlot('chart', priceTraces, priceLayout, config).then(() => {
+                // Add data attribute to indicate chart is ready (for tests)
+                document.getElementById('chart').setAttribute('data-chart-ready', 'true');
+            });
+
+            // ========================================
+            // CHART 2: Tranche Value Chart
+            // ========================================
+
+            const trancheTraces = [];
+            const trancheColors = ['#667eea', '#764ba2', '#f093fb', '#4facfe', '#43e97b', '#fa709a', '#fee140'];
+
+            // Sort buy transactions by date for consistent ordering
+            const sortedBuyTransactions = [...buyTransactions].sort((a, b) =>
+                new Date(a.date) - new Date(b.date)
+            );
+
+            // Pre-assign colors and prepare transaction data
+            const trancheData = sortedBuyTransactions.map((buyTrans, idx) => {
+                const buyDate = buyTrans.date;
+                const buyPrice = buyTrans.price;
+                const quantity = buyTrans.quantity;
+                const color = trancheColors[idx % trancheColors.length];
+
+                // Create arrays for dates and values starting from buy date
+                const trancheDates = [];
+                const trancheValues = [];
+
+                // Find all prices from buy date onwards
+                data.prices.forEach(p => {
+                    if (p.date >= buyDate) {
+                        trancheDates.push(p.date);
+                        // Value = current price * quantity in this tranche
+                        trancheValues.push(p.close * quantity);
+                    }
+                });
+
+                return {
+                    buyTrans,
+                    buyDate,
+                    buyPrice,
+                    quantity,
+                    color,
+                    trancheDates,
+                    trancheValues,
+                    trancheNumber: idx + 1
+                };
+            });
+
+            // Create traces only for tranches with price data
+            trancheData.forEach(td => {
+                if (td.trancheValues.length > 0) {
+                    const trancheTrace = {
+                        x: td.trancheDates,
+                        y: td.trancheValues,
+                        mode: 'lines',
+                        name: `Tranche ${td.trancheNumber} (${td.quantity} @ ${formatPrice(td.buyPrice, td.buyTrans.currency)})`,
+                        line: {
+                            color: td.color,
+                            width: 2.5
+                        },
+                        hovertemplate: `<b>Tranche ${td.trancheNumber}</b><br>` +
+                                      `Value: ${getCurrencySymbol(currency)}%{y:.2f}<br>` +
+                                      `Date: %{x}<extra></extra>`
+                    };
+
+                    trancheTraces.push(trancheTrace);
+                }
+            });
+
+            const trancheLayout = {
+                title: '',
+                xaxis: {
+                    title: 'Date',
+                    type: 'date'
+                },
+                yaxis: {
+                    title: `Investment Value (${currency})`,
+                    fixedrange: false
+                },
+                hovermode: 'x unified',
+                showlegend: true,
+                legend: {
+                    x: 0,
+                    y: 1.15,
+                    orientation: 'h',
+                    bgcolor: 'rgba(255, 255, 255, 0.9)'
+                },
+                plot_bgcolor: '#f7fafc',
+                paper_bgcolor: 'white',
+                margin: { t: 10 },
+                font: {
+                    family: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Oxygen, Ubuntu, Cantarell, sans-serif'
+                }
+            };
+
+            Plotly.newPlot('tranche-chart', trancheTraces, trancheLayout, config);
+
+            // ========================================
+            // Tranche List
+            // ========================================
+
+            let trancheListHtml = '';
+
+            // Create mapping from tranche number to trace index
+            const trancheToTraceMap = {};
+            let traceIndex = 0;
+            trancheData.forEach((td, idx) => {
+                if (td.trancheValues.length > 0) {
+                    trancheToTraceMap[idx] = traceIndex;
+                    traceIndex++;
+                }
+            });
+
+            trancheData.forEach((td, idx) => {
+                const date = new Date(td.buyDate).toLocaleDateString('en-US', {
+                    year: 'numeric',
+                    month: 'short',
+                    day: 'numeric'
+                });
+
+                // Find current value of this tranche
+                const currentValue = latestPrice * td.quantity;
+                const purchaseValue = td.buyPrice * td.quantity;
+                const trancheGain = currentValue - purchaseValue;
+                const trancheGainPercent = ((trancheGain / purchaseValue) * 100).toFixed(2);
+
+                trancheListHtml += `
+                    <div class="tranche-item" data-tranche-index="${idx}" style="border-left-color: ${td.color}">
+                        <div class="tranche-color" style="background-color: ${td.color}"></div>
+                        <div class="tranche-details">
+                            <div class="tranche-info">
+                                <div class="tranche-label">Tranche ${td.trancheNumber}</div>
+                                <div class="tranche-date">${date}</div>
+                                <div class="tranche-quantity">${td.quantity} shares @ ${formatPrice(td.buyPrice, td.buyTrans.currency)}</div>
+                            </div>
+                            <div class="tranche-info" style="text-align: right;">
+                                <div class="tranche-price">${formatPrice(currentValue, currency)}</div>
+                                <div class="tranche-quantity" style="color: ${trancheGain >= 0 ? '#48bb78' : '#fc8181'}">
+                                    ${trancheGain >= 0 ? '+' : ''}${formatPrice(Math.abs(trancheGain), currency)} (${trancheGainPercent}%)
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                `;
+            });
+
+            document.getElementById('tranche-list').innerHTML = trancheListHtml;
+
+            // Add click handlers for tranche highlighting
+            const trancheItems = document.querySelectorAll('.tranche-item');
+            let selectedTrancheIndex = null;
+
+            trancheItems.forEach(item => {
+                item.addEventListener('click', function() {
+                    const trancheIndex = parseInt(this.getAttribute('data-tranche-index'));
+                    const traceIndex = trancheToTraceMap[trancheIndex];
+
+                    // Skip if this tranche doesn't have a corresponding trace
+                    if (traceIndex === undefined) {
+                        return;
+                    }
+
+                    // Toggle selection
+                    if (selectedTrancheIndex === trancheIndex) {
+                        // Deselect - restore all traces to normal
+                        selectedTrancheIndex = null;
+                        trancheItems.forEach(ti => ti.classList.remove('selected'));
+
+                        // Reset all traces
+                        const updates = {
+                            'line.width': Array(trancheTraces.length).fill(2.5),
+                            'opacity': Array(trancheTraces.length).fill(1)
+                        };
+                        Plotly.restyle('tranche-chart', updates);
+                    } else {
+                        // Select this tranche
+                        selectedTrancheIndex = trancheIndex;
+                        trancheItems.forEach(ti => ti.classList.remove('selected'));
+                        this.classList.add('selected');
+
+                        // Highlight selected trace, dim others
+                        const lineWidths = trancheTraces.map((_, i) => i === traceIndex ? 4 : 1.5);
+                        const opacities = trancheTraces.map((_, i) => i === traceIndex ? 1 : 0.3);
+
+                        const updates = {
+                            'line.width': lineWidths,
+                            'opacity': opacities
+                        };
+                        Plotly.restyle('tranche-chart', updates);
+                    }
+                });
+            });
+
+            // ========================================
+            // CHART 3: Position Value % Chart
+            // ========================================
+
+            if (data.position_percentage && data.position_percentage.length > 0) {
+                const posPercentDates = data.position_percentage.map(p => p.date);
+                const posPercentValues = data.position_percentage.map(p => p.percentage);
+
+                // Calculate dynamic Y-axis range centered on 100% (break-even)
+                const minValue = Math.min(...posPercentValues);
+                const maxValue = Math.max(...posPercentValues);
+
+                // Calculate distance from 100% for both directions
+                const distanceBelow = 100 - minValue;
+                const distanceAbove = maxValue - 100;
+
+                // Use the larger distance and add 10% padding
+                const maxDistance = Math.max(distanceBelow, distanceAbove, 40); // Minimum 40% range
+                const padding = maxDistance * 0.1;
+                const yRange = [100 - maxDistance - padding, 100 + maxDistance + padding];
+
+                const posPercentTrace = {
+                    x: posPercentDates,
+                    y: posPercentValues,
+                    mode: 'lines',
+                    name: 'Position Value',
+                    line: {
+                        color: '#667eea',
+                        width: 3
+                    },
+                    fill: 'tozeroy',
+                    fillcolor: 'rgba(102, 126, 234, 0.2)',
+                    hovertemplate: `<b>Position Value</b><br>` +
+                                  `%{y:.2f}%<br>` +
+                                  `Date: %{x}<extra></extra>`
+                };
+
+                const posPercentLayout = {
+                    height: 350,
+                    xaxis: {
+                        title: 'Date',
+                        type: 'date',
+                        gridcolor: '#e2e8f0'
+                    },
+                    yaxis: {
+                        title: 'Position Value (%)',
+                        gridcolor: '#e2e8f0',
+                        range: yRange,
+                        fixedrange: false,
+                        zeroline: true,
+                        zerolinecolor: '#cbd5e0'
+                    },
+                    hovermode: 'x unified',
+                    showlegend: false,
+                    plot_bgcolor: '#f7fafc',
+                    paper_bgcolor: 'white',
+                    margin: { t: 10 },
+                    font: {
+                        family: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Oxygen, Ubuntu, Cantarell, sans-serif'
+                    },
+                    shapes: [{
+                        type: 'line',
+                        x0: posPercentDates[0],
+                        x1: posPercentDates[posPercentDates.length - 1],
+                        y0: 100,
+                        y1: 100,
+                        line: {
+                            color: '#e53e3e',
+                            width: 2,
+                            dash: 'dash'
+                        }
+                    }],
+                    annotations: [{
+                        x: posPercentDates[Math.floor(posPercentDates.length / 2)],
+                        y: 100,
+                        text: '100% (Break Even)',
+                        showarrow: false,
+                        yshift: -15,
+                        font: {
+                            size: 10,
+                            color: '#e53e3e'
+                        }
+                    }]
+                };
+
+                Plotly.newPlot('position-percentage-chart', [posPercentTrace], posPercentLayout, config);
+            }
+
+            // ========================================
+            // CHART 4: Index Comparison Chart
+            // ========================================
+
+            if (data.indices && data.indices.length > 0 && data.stock_normalized) {
+                const indexTraces = [];
+
+                // Add stock normalized performance
+                const stockDates = data.stock_normalized.map(s => s.date);
+                const stockNormalized = data.stock_normalized.map(s => s.normalized);
+
+                const stockTrace = {
+                    x: stockDates,
+                    y: stockNormalized,
+                    mode: 'lines',
+                    name: data.stock.name,
+                    line: {
+                        color: '#667eea',
+                        width: 3
+                    },
+                    hovertemplate: `<b>${data.stock.name}</b><br>` +
+                                  `Change: %{y:.2f}%<br>` +
+                                  `Date: %{x}<extra></extra>`
+                };
+                indexTraces.push(stockTrace);
+
+                // Add index traces
+                const indexColors = ['#48bb78', '#fc8181'];  // Green for S&P, Red for Euro Stoxx
+                data.indices.forEach((index, idx) => {
+                    const indexDates = index.data.map(d => d.date);
+                    const indexValues = index.data.map(d => d.normalized);
+
+                    const indexTrace = {
+                        x: indexDates,
+                        y: indexValues,
+                        mode: 'lines',
+                        name: index.name,
+                        line: {
+                            color: indexColors[idx] || '#718096',
+                            width: 2,
+                            dash: 'dash'
+                        },
+                        hovertemplate: `<b>${index.name}</b><br>` +
+                                      `Change: %{y:.2f}%<br>` +
+                                      `Date: %{x}<extra></extra>`
+                    };
+                    indexTraces.push(indexTrace);
+                });
+
+                const indexLayout = {
+                    height: 350,
+                    xaxis: {
+                        title: 'Date',
+                        gridcolor: '#e2e8f0'
+                    },
+                    yaxis: {
+                        title: 'Percentage Change (%)',
+                        gridcolor: '#e2e8f0',
+                        zeroline: true,
+                        zerolinecolor: '#cbd5e0',
+                        zerolinewidth: 2
+                    },
+                    hovermode: 'x unified',
+                    showlegend: true,
+                    legend: {
+                        x: 0,
+                        y: 1.15,
+                        orientation: 'h',
+                        bgcolor: 'rgba(255, 255, 255, 0.9)'
+                    },
+                    plot_bgcolor: '#f7fafc',
+                    paper_bgcolor: 'white',
+                    margin: { t: 10 },
+                    font: {
+                        family: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Oxygen, Ubuntu, Cantarell, sans-serif'
+                    }
+                };
+
+                Plotly.newPlot('index-chart', indexTraces, indexLayout, config);
+            }
+        }
+
+        function showError(message) {
+            document.getElementById('loading').style.display = 'none';
+            const errorDiv = document.getElementById('error');
+            errorDiv.textContent = message;
+            errorDiv.style.display = 'block';
+        }
+
+        function showUploadStatus(message, isSuccess) {
+            const statusDiv = document.getElementById('upload-status');
+            statusDiv.textContent = message;
+            statusDiv.className = 'upload-status ' + (isSuccess ? 'success' : 'error');
+            statusDiv.style.display = 'block';
+
+            setTimeout(() => {
+                statusDiv.style.display = 'none';
+            }, 5000);
+        }
+
+        function showUploadProgress(message, progress) {
+            const progressContainer = document.getElementById('upload-progress');
+            const progressMessage = document.getElementById('upload-progress-message');
+            const progressBar = document.getElementById('progress-bar-fill');
+
+            progressMessage.textContent = message;
+            progressBar.style.width = progress + '%';
+            progressContainer.style.display = 'block';
+        }
+
+        function hideUploadProgress() {
+            const progressContainer = document.getElementById('upload-progress');
+            progressContainer.style.display = 'none';
+        }
+
+        // Handle file upload
+        document.getElementById('file-input').addEventListener('change', async function(e) {
+            const file = e.target.files[0];
+            if (!file) return;
+
+            const formData = new FormData();
+            formData.append('file', file);
+
+            let progressInterval;
+            let currentProgress = 0;
+
+            // Pause server status checks during upload
+            uploadInProgress = true;
+
+            try {
+                // Show initial progress
+                showUploadProgress('📤 Uploading file...', 10);
+
+                // Simulate progress animation
+                progressInterval = setInterval(() => {
+                    if (currentProgress < 90) {
+                        currentProgress += Math.random() * 15;
+                        if (currentProgress > 90) currentProgress = 90;
+
+                        let message = '📤 Uploading file...';
+                        if (currentProgress > 30) {
+                            message = '📊 Processing transactions...';
+                        }
+                        if (currentProgress > 60) {
+                            message = '💰 Fetching market prices...';
+                        }
+
+                        showUploadProgress(message, currentProgress);
+                    }
+                }, 500);
+
+                const response = await fetch('/api/upload-transactions', {
+                    method: 'POST',
+                    body: formData
+                });
+
+                const result = await response.json();
+
+                // Clear the progress interval
+                clearInterval(progressInterval);
+
+                if (result.success) {
+                    // Show completion
+                    showUploadProgress('✅ Upload complete!', 100);
+
+                    // Hide progress bar and show success message
+                    setTimeout(() => {
+                        hideUploadProgress();
+                        showUploadStatus('✅ ' + result.message + ' - Refreshing page in 3 seconds...', true);
+
+                        // Reload the page after successful upload
+                        setTimeout(() => {
+                            window.location.reload();
+                        }, 3000);
+                    }, 1000);
+                } else {
+                    hideUploadProgress();
+                    showUploadStatus('❌ ' + result.message, false);
+                }
+            } catch (error) {
+                clearInterval(progressInterval);
+                hideUploadProgress();
+                // Resume server status checks
+                uploadInProgress = false;
+                // Check if server went offline
+                const isOnline = await checkServerStatus();
+                if (!isOnline) {
+                    // Reset file input before returning
+                    e.target.value = '';
+                    return;
+                }
+                showUploadStatus('Error uploading file: ' + error.message, false);
+            }
+
+            // Resume server status checks (in case of success path without page reload)
+            uploadInProgress = false;
+
+            // Reset file input
+            e.target.value = '';
+        });
+
+        // Load and display market data status
+        async function loadMarketDataStatus() {
+            try {
+                const response = await fetch('/api/market-data-status');
+                const data = await response.json();
+
+                const statusDiv = document.getElementById('market-data-status');
+                if (!statusDiv) return;
+
+                if (data.has_data && data.latest_date) {
+                    const date = new Date(data.latest_date);
+                    const formattedDate = date.toLocaleDateString('en-US', {
+                        year: 'numeric',
+                        month: 'short',
+                        day: 'numeric'
+                    });
+                    statusDiv.textContent = `Latest market data: ${formattedDate}`;
+                } else {
+                    statusDiv.textContent = 'No market data available';
+                }
+            } catch (error) {
+                console.error('Failed to load market data status:', error);
+                // Check if server went offline
+                await checkServerStatus();
+            }
+        }
+
+        // Update market data function
+        async function updateMarketData() {
+            // Pause server status checks during market data update
+            uploadInProgress = true;
+
+            try {
+                showUploadStatus('📊 Fetching latest market data...', true);
+
+                const response = await fetch('/api/update-market-data', {
+                    method: 'POST'
+                });
+
+                const result = await response.json();
+
+                if (result.success) {
+                    showUploadStatus('✅ ' + result.message + ' - Refreshing page in 3 seconds...', true);
+                    // Reload page after successful update
+                    setTimeout(() => {
+                        window.location.reload();
+                    }, 3000);
+                } else {
+                    // Resume server status checks on non-success response
+                    uploadInProgress = false;
+                    showUploadStatus('❌ ' + result.message, false);
+                }
+            } catch (error) {
+                // Resume server status checks
+                uploadInProgress = false;
+                // Check if server went offline
+                const isOnline = await checkServerStatus();
+                if (!isOnline) {
+                    return;
+                }
+                showUploadStatus('Error updating market data: ' + error.message, false);
+            }
+        }
+
+        // Show custom confirmation modal
+        function showConfirmModal(title, message, icon, onConfirm) {
+            const modal = document.getElementById('purge-modal');
+            modal.innerHTML = `
+                <div class="modal-overlay" onclick="hideConfirmModal(event)">
+                    <div class="modal-content" onclick="event.stopPropagation()">
+                        <div class="modal-header">
+                            <div class="modal-icon">${icon}</div>
+                            <h2 class="modal-title">${title}</h2>
+                        </div>
+                        <div class="modal-message">${message}</div>
+                        <div class="modal-actions">
+                            <button class="modal-btn modal-btn-cancel" onclick="hideConfirmModal()">Cancel</button>
+                            <button class="modal-btn modal-btn-danger" id="confirm-action-btn">Delete All Data</button>
+                        </div>
+                    </div>
+                </div>
+            `;
+            modal.style.display = 'block';
+
+            // Add confirm handler
+            document.getElementById('confirm-action-btn').onclick = () => {
+                hideConfirmModal();
+                onConfirm();
+            };
+
+            // Close on ESC key
+            const escHandler = (e) => {
+                if (e.key === 'Escape') {
+                    hideConfirmModal();
+                    document.removeEventListener('keydown', escHandler);
+                }
+            };
+            document.addEventListener('keydown', escHandler);
+        }
+
+        function hideConfirmModal(event) {
+            // Only close if clicking overlay, not content
+            if (event && event.target.classList.contains('modal-content')) {
+                return;
+            }
+            const modal = document.getElementById('purge-modal');
+            modal.style.display = 'none';
+            modal.innerHTML = '';
+        }
+
+        async function purgeDatabase() {
+            showConfirmModal(
+                'Delete All Data',
+                `
+                    <p><strong>⚠️ WARNING: This will DELETE ALL data from the database!</strong></p>
+                    <p>This includes:</p>
+                    <ul>
+                        <li>All stocks</li>
+                        <li>All transactions</li>
+                        <li>All price history</li>
+                        <li>All indices</li>
+                    </ul>
+                    <p><strong>This action CANNOT be undone!</strong></p>
+                `,
+                '🗑️',
+                async () => {
+                    // Pause server status checks during purge
+                    uploadInProgress = true;
+
+                    try {
+                        showUploadStatus('🗑️ Purging database...', true);
+
+                        const response = await fetch('/api/purge-database', {
+                            method: 'POST'
+                        });
+
+                        const result = await response.json();
+
+                        if (result.success) {
+                            // Clear holdings and disable purge button
+                            holdings = [];
+                            await updatePurgeButtonState();
+
+                            showUploadStatus(
+                                `✅ Database purged successfully!\n` +
+                                `Deleted: ${result.deleted.stocks} stocks, ` +
+                                `${result.deleted.transactions} transactions, ` +
+                                `${result.deleted.stock_prices} prices\n` +
+                                `Reloading page...`,
+                                true
+                            );
+                            // Reload page after successful purge
+                            setTimeout(() => {
+                                window.location.reload();
+                            }, 3000);
+                        } else {
+                            // Resume server status checks on failure
+                            uploadInProgress = false;
+                            showUploadStatus('❌ ' + result.message, false);
+                        }
+                    } catch (error) {
+                        // Resume server status checks
+                        uploadInProgress = false;
+                        // Check if server went offline
+                        const isOnline = await checkServerStatus();
+                        if (!isOnline) {
+                            return;
+                        }
+                        showUploadStatus('Error purging database: ' + error.message, false);
+                    }
+                }
+            );
+        }
+
+        // Handle account statement upload
+        document.getElementById('account-file-input').addEventListener('change', async function(e) {
+            const file = e.target.files[0];
+            if (!file) return;
+
+            const formData = new FormData();
+            formData.append('file', file);
+
+            uploadInProgress = true;
+            try {
+                showUploadStatus('🏦 Uploading account statement...', true);
+
+                const response = await fetch('/api/upload-account', {
+                    method: 'POST',
+                    body: formData
+                });
+                const result = await response.json();
+
+                if (result.success) {
+                    showUploadStatus('✅ ' + result.message + ' — Refreshing...', true);
+                    setTimeout(() => window.location.reload(), 2000);
+                } else {
+                    showUploadStatus('❌ ' + result.message, false);
+                }
+            } catch (error) {
+                uploadInProgress = false;
+                const isOnline = await checkServerStatus();
+                if (!isOnline) { e.target.value = ''; return; }
+                showUploadStatus('Error uploading file: ' + error.message, false);
+            }
+
+            uploadInProgress = false;
+            e.target.value = '';
+        });
+
+        // ========================================
+        // Time Travel
+        // ========================================
+        let ttMinDate = null;
+        let ttMaxDate = null;
+        let portfolioHistoryDates = [];
+        let selectedHistoryDate = null;
+
+        function clampDateToRange(date) {
+            if (!date) return date;
+            if (ttMinDate && date < ttMinDate) return ttMinDate;
+            if (ttMaxDate && date > ttMaxDate) return ttMaxDate;
+            return date;
+        }
+
+        function nearestHistoryDate(targetDate) {
+            if (!portfolioHistoryDates.length || !targetDate) return targetDate;
+            if (portfolioHistoryDates.includes(targetDate)) return targetDate;
+            let nearest = portfolioHistoryDates[0];
+            let bestDiff = Math.abs(new Date(nearest) - new Date(targetDate));
+            for (const d of portfolioHistoryDates) {
+                const diff = Math.abs(new Date(d) - new Date(targetDate));
+                if (diff < bestDiff) {
+                    nearest = d;
+                    bestDiff = diff;
+                }
+            }
+            return nearest;
+        }
+
+        function updateHistoryChartSelection(date, centerView = false) {
+            const chartEl = document.getElementById('portfolio-valuation-chart');
+            if (!chartEl || !chartEl.data || !chartEl.layout) return;
+
+            const shapes = [{
+                type: 'line',
+                xref: 'x',
+                yref: 'paper',
+                x0: date,
+                x1: date,
+                y0: 0,
+                y1: 1,
+                line: { color: '#1098c9', width: 2, dash: 'dot' },
+            }];
+
+            const relayoutUpdate = { shapes };
+
+            if (centerView) {
+                const selected = new Date(date + 'T00:00:00');
+                const left = new Date(selected);
+                const right = new Date(selected);
+                left.setDate(left.getDate() - 60);
+                right.setDate(right.getDate() + 14);
+                relayoutUpdate['xaxis.range'] = [left.toISOString().split('T')[0], right.toISOString().split('T')[0]];
+            }
+
+            Plotly.relayout('portfolio-valuation-chart', relayoutUpdate);
+        }
+
+        function syncHistoryDate(date, source = 'selector') {
+            if (!date) return;
+            const clamped = clampDateToRange(date);
+            const snapped = nearestHistoryDate(clamped);
+            selectedHistoryDate = snapped;
+
+            const input = document.getElementById('tt-date');
+            if (input && input.value !== snapped) {
+                input.value = snapped;
+            }
+
+            loadTimeTravel(snapped);
+            updateHistoryChartSelection(snapped, source === 'selector');
+        }
+
+        async function initTimeTravel() {
+            try {
+                const resp = await fetch('/api/time-travel/range');
+                const range = await resp.json();
+                ttMinDate = range.min_date;
+                ttMaxDate = range.max_date;
+                if (!ttMinDate || !ttMaxDate) return;
+
+                const input = document.getElementById('tt-date');
+                input.min = ttMinDate;
+                input.max = ttMaxDate;
+                input.value = ttMaxDate;
+                input.addEventListener('change', () => syncHistoryDate(input.value, 'selector'));
+
+                syncHistoryDate(ttMaxDate, 'init');
+            } catch (err) {
+                console.error('Failed to init time travel:', err);
+            }
+        }
+
+        function ttShiftDate(delta) {
+            const input = document.getElementById('tt-date');
+            if (!input.value) return;
+            const d = new Date(input.value);
+            d.setDate(d.getDate() + delta);
+            const newDate = d.toISOString().split('T')[0];
+            if (ttMinDate && newDate < ttMinDate) return;
+            if (ttMaxDate && newDate > ttMaxDate) return;
+            input.value = newDate;
+            syncHistoryDate(newDate, 'selector');
+        }
+
+        async function loadTimeTravel(date) {
+            const container = document.getElementById('tt-content');
+            container.innerHTML = '<div class="tt-loading">Loading portfolio snapshot...</div>';
+
+            try {
+                const resp = await fetch(`/api/time-travel?date=${encodeURIComponent(date)}`);
+                const data = await resp.json();
+                renderTimeTravel(data);
+            } catch (err) {
+                container.innerHTML = '<div class="tt-empty">Failed to load data.</div>';
+                console.error('Time travel error:', err);
+            }
+        }
+
+        function renderTimeTravel(data) {
+            const container = document.getElementById('tt-content');
+
+            if (!data.holdings || data.holdings.length === 0) {
+                container.innerHTML = '<div class="tt-empty">No holdings on this date.</div>';
+                return;
+            }
+
+            const fmtEur = (v) => '€ ' + Math.abs(v).toLocaleString('nl-NL', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+            const sign = (v) => v > 0 ? '+' : (v < 0 ? '-' : '');
+            const changeCls = (v) => v >= 0 ? 'positive' : 'negative';
+
+            // Separate stocks and ETFs/trackers
+            // Heuristic: if exchange is XET or name contains ETF/Tracker/UCITS, it's a tracker
+            const trackerKeywords = ['ETF', 'UCITS', 'Tracker', 'iShares', 'Vanguard', 'SPDR', 'Amundi', 'Xtrackers', 'Lyxor'];
+            const isTracker = (h) => trackerKeywords.some(kw => (h.name || '').toLowerCase().includes(kw.toLowerCase()));
+
+            const stocks = data.holdings.filter(h => !isTracker(h));
+            const trackers = data.holdings.filter(h => isTracker(h));
+
+            function renderHoldingRow(h) {
+                const priceStr = h.price != null ? formatPrice(h.price, h.currency) : '—';
+                const metaExchange = h.exchange || '';
+                const metaLine = `${metaExchange} | ${priceStr} × ${h.shares}`;
+                const valueStr = h.total_value_eur != null ? fmtEur(h.total_value_eur) : '—';
+
+                let changeHtml = '';
+                if (h.daily_change_eur != null) {
+                    const cls = changeCls(h.daily_change_eur);
+                    const pctStr = h.daily_change_pct != null
+                        ? ` (${sign(h.daily_change_pct)}${Math.abs(h.daily_change_pct).toLocaleString('nl-NL', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}%)`
+                        : '';
+                    changeHtml = `<div class="tt-holding-change ${cls}">${sign(h.daily_change_eur)}${fmtEur(h.daily_change_eur)}${pctStr}</div>`;
+                }
+
+                return `
+                    <div class="tt-holding-row">
+                        <div class="tt-holding-left">
+                            <div class="tt-holding-name">${h.name}</div>
+                            <div class="tt-holding-meta">${metaLine}</div>
+                        </div>
+                        <div class="tt-holding-right">
+                            <div class="tt-holding-value">${valueStr}</div>
+                            ${changeHtml}
+                        </div>
+                    </div>
+                `;
+            }
+
+            function renderSection(title, items) {
+                if (!items.length) return '';
+                return `
+                    <div class="tt-section-title">${title}</div>
+                    <div class="tt-sort-row">
+                        <span>Koers × Aantal</span>
+                        <span>Dag +/−</span>
+                    </div>
+                    <div class="tt-holdings-list">
+                        ${items.map(renderHoldingRow).join('')}
+                    </div>
+                `;
+            }
+
+            const changeText = `${sign(data.daily_change_eur)}${fmtEur(data.daily_change_eur)} (${sign(data.daily_change_pct)}${Math.abs(data.daily_change_pct).toLocaleString('nl-NL', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}%)`;
+
+            container.innerHTML = `
+                <div class="tt-header">
+                    <div class="tt-header-value">${fmtEur(data.total_value_eur)}</div>
+                    <div class="tt-header-change ${changeCls(data.daily_change_eur)}">
+                        ${changeText}
+                    </div>
+                </div>
+                ${renderSection('Stocks', stocks)}
+                ${renderSection("Trackers (ETF's)", trackers)}
+            `;
+        }
+
+        // Load and display cash movements
+        async function loadCashMovements() {
+            try {
+                const response = await fetch('/api/cash-movements');
+                const data = await response.json();
+
+                if (!data.movements || data.movements.length === 0) return;
+
+                const section = document.getElementById('cash-movements-section');
+                section.style.display = 'block';
+
+                // Render summary
+                const s = data.summary;
+                document.getElementById('cash-summary-grid').innerHTML = `
+                    <div class="summary-stat">
+                        <div class="summary-label">Total Deposits</div>
+                        <div class="summary-value positive">+€${s.total_deposits.toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2})}</div>
+                    </div>
+                    <div class="summary-stat">
+                        <div class="summary-label">Total Withdrawals</div>
+                        <div class="summary-value negative">-€${s.total_withdrawals.toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2})}</div>
+                    </div>
+                    <div class="summary-stat">
+                        <div class="summary-label">Net Deposited</div>
+                        <div class="summary-value">€${s.net_deposits.toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2})}</div>
+                    </div>
+                    <div class="summary-stat">
+                        <div class="summary-label">Movements</div>
+                        <div class="summary-value">${s.count}</div>
+                    </div>
+                `;
+
+                // Render table
+                const tbody = document.getElementById('cash-movements-body');
+                tbody.innerHTML = data.movements.map(m => {
+                    const date = new Date(m.date).toLocaleDateString('en-US', {
+                        year: 'numeric', month: 'short', day: 'numeric'
+                    });
+                    const isDeposit = m.type === 'deposit';
+                    const color = isDeposit ? '#48bb78' : '#fc8181';
+                    const sign = isDeposit ? '+' : '-';
+                    const typeLabel = isDeposit ? '↓ Deposit' : '↑ Withdrawal';
+                    const balanceStr = m.balance != null
+                        ? `€${m.balance.toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2})}`
+                        : '—';
+
+                    return `<tr style="border-bottom: 1px solid #e2e8f0;">
+                        <td style="padding: 8px 12px;">${date}</td>
+                        <td style="padding: 8px 12px; color: ${color}; font-weight: 600;">${typeLabel}</td>
+                        <td style="padding: 8px 12px; color: #718096;">${m.description}</td>
+                        <td style="padding: 8px 12px; text-align: right; font-weight: 600; color: ${color};">
+                            ${sign}€${Math.abs(m.amount).toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2})}
+                        </td>
+                        <td style="padding: 8px 12px; text-align: right; color: #4a5568;">${balanceStr}</td>
+                    </tr>`;
+                }).join('');
+
+            } catch (error) {
+                console.error('Failed to load cash movements:', error);
+            }
+        }
+
+        // Live price updates (FMP only)
+        let livePricesEnabled = false;
+        let livePricesInterval = null;
+
+        async function refreshLivePrices() {
+            try {
+                const response = await fetch('/api/refresh-live-prices', {
+                    method: 'POST'
+                });
+
+                const result = await response.json();
+
+                if (result.success && result.quotes) {
+                    // Update holdings with new prices
+                    result.quotes.forEach(quote => {
+                        const holding = holdings.find(h => h.id === quote.stock_id);
+                        if (holding) {
+                            holding.latest_price = quote.price;
+                            holding.price_change_pct = quote.change_percent;
+                            holding.price_date = new Date().toISOString().split('T')[0];
+                        }
+                    });
+
+                    // Re-render holdings to show updated prices
+                    renderHoldings();
+
+                    // Update portfolio summary and valuation chart with new prices
+                    await loadPortfolioSummary();
+                    await loadPortfolioValuationChart();
+
+                    // If a stock chart is currently displayed, reload it to show updated prices
+                    if (selectedStockId !== null) {
+                        await loadStockChart(selectedStockId);
+                    }
+
+                    // Live prices are active; holdings and summary have been refreshed.
+                    livePricesEnabled = true;
+                } else if (!result.success) {
+                    console.log('Live prices not available:', result.message);
+                    livePricesEnabled = false;
+                }
+            } catch (error) {
+                console.error('Failed to refresh live prices:', error);
+                // Check if server went offline
+                await checkServerStatus();
+            }
+        }
+
+        function startLivePriceUpdates() {
+            // Try to fetch live prices immediately
+            refreshLivePrices();
+
+            // Then poll every 60 seconds
+            livePricesInterval = setInterval(refreshLivePrices, 60000);
+        }
+
+        function stopLivePriceUpdates() {
+            if (livePricesInterval) {
+                clearInterval(livePricesInterval);
+                livePricesInterval = null;
+            }
+        }
+
+        // Initialize
+        function setLoadingStatus(text) {
+            const el = document.getElementById('loading-status');
+            if (el) el.textContent = text;
+        }
+
+        async function initialize() {
+            // Start continuous server monitoring (every 5 seconds)
+            startServerMonitoring();
+
+            // Check server status first
+            const isOnline = await checkServerStatus();
+
+            if (!isOnline) {
+                return;
+            }
+
+            document.getElementById('portfolio-header').style.display = 'block';
+
+            // Load summary, portfolio history, and deposits panels.
+            setLoadingStatus('Loading summary, history, and deposits...');
+            await Promise.all([
+                loadPortfolioValuationChart(),
+                loadPortfolioSummary(),
+                loadCashMovements(),
+                initTimeTravel(),
+            ]);
+
+            await updatePurgeButtonState();
+            document.getElementById('loading').style.display = 'none';
+        }
+
+        initialize();
+    </script>
+
+    <!-- Purge Confirmation Modal -->
+    <div id="purge-modal" style="display: none;">
+        <!-- Modal will be populated by JavaScript -->
+    </div>
+</body>
+</html>
