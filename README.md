@@ -2,6 +2,8 @@
 
 DEGIRO Portfolio History fills a critical gap: view your portfolio's historical performance over time with interactive charts and graphs. While DEGIRO doesn't provide historical portfolio visualization, this app imports your account data and transaction history to build a complete picture of your portfolio performance, holdings, and market comparisons.
 
+![Desktop preview](docs/desktop.gif)
+
 ## Installation
 
 ### Option 1: Docker Compose
@@ -56,12 +58,8 @@ The app expects two Excel files from DEGIRO:
 
 Tip: when importing for the first time, upload both files using the same full date range so transaction history and cash movements are aligned.
 
-## Preview
+## Mobile Preview
 
-### Desktop view
-![Desktop preview](docs/desktop.gif)
-
-### Mobile view
 <img src="docs/mobile.gif" alt="Mobile preview" width="280" />
 
 For more screenshots, browse the [docs folder](docs/).
