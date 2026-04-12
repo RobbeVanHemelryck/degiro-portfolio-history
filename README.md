@@ -47,7 +47,12 @@ Tip: when importing for the first time, upload both files using the same full da
 The main dashboard displays your current holdings, performance metrics, and market data.
 
 ### Mobile view
+<div style="max-width: 300px;">
+
 ![Mobile preview](docs/mobile-1.png)
+
+</div>
+
 The interface is fully responsive and works on smartphones and tablets for on-the-go portfolio tracking.
 
 For more screenshots, see the [docs](docs/) folder.
