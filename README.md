@@ -4,7 +4,7 @@ DEGIRO Portfolio History imports DEGIRO account exports and stores transaction a
 
 ## Installation
 
-Run the app with Docker Compose:
+### Option 1: Docker Compose
 
 ```yaml
 degiro-portfolio-history:
@@ -16,6 +16,22 @@ degiro-portfolio-history:
 ```
 
 Replace `<database-folder>` with a local folder path where you want the database to be persisted.
+
+### Option 2: Run locally
+
+1. Prerequisites: Node.js 20+ (download from [nodejs.org](https://nodejs.org))
+2. Clone or download this repository
+3. Install dependencies:
+   ```bash
+   npm install
+   ```
+4. Start the server:
+   ```bash
+   npm start
+   ```
+5. Open your browser to `http://localhost:8000`
+
+The database will be created in `/config` directory (or set the `DEGIRO_PORTFOLIO_DB_DIR` environment variable to specify a different location).
 
 ## Import Data
 
