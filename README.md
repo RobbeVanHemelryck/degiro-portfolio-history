@@ -42,12 +42,10 @@ Tip: when importing for the first time, upload both files using the same full da
 
 ## Preview
 
-### Desktop screenshots
-![Desktop screenshot 1](docs/desktop-1.png)
-![Desktop screenshot 2](docs/desktop%202.png)
-![Desktop screenshot 3](docs/desktop-3.png)
+### Desktop preview
+![Desktop preview](docs/desktop.gif)
 
-### Mobile screenshots
-<img src="docs/mobile-1.png" alt="Mobile screenshot 1" width="280" />
-<img src="docs/mobile-2.png" alt="Mobile screenshot 2" width="280" />
-<img src="docs/mobile-3.png" alt="Mobile screenshot 3" width="280" />
+### Mobile preview
+<img src="docs/mobile.gif" alt="Mobile preview" width="280" />
+
+See [docs](docs/) for additional screenshots.
