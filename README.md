@@ -42,13 +42,12 @@ Tip: when importing for the first time, upload both files using the same full da
 
 ## Preview
 
-### Desktop view
-![Desktop preview](docs/desktop-1.png)
-The main dashboard displays your current holdings, performance metrics, and market data.
+### Desktop screenshots
+![Desktop screenshot 1](docs/desktop-1.png)
+![Desktop screenshot 2](docs/desktop%202.png)
+![Desktop screenshot 3](docs/desktop-3.png)
 
-### Mobile view
-<img src="docs/mobile-1.png" alt="Mobile preview" width="280" />
-
-The interface is fully responsive and works on smartphones and tablets for on-the-go portfolio tracking.
-
-For more screenshots, see the [docs](docs/) folder.
+### Mobile screenshots
+<img src="docs/mobile-1.png" alt="Mobile screenshot 1" width="280" />
+<img src="docs/mobile-2.png" alt="Mobile screenshot 2" width="280" />
+<img src="docs/mobile-3.png" alt="Mobile screenshot 3" width="280" />
