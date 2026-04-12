@@ -1,6 +1,6 @@
 # DEGIRO Portfolio History
 
-DEGIRO Portfolio History imports DEGIRO account exports and stores transaction and market history in a local SQLite database. It provides a web interface to review holdings, price history, and portfolio performance over time.
+DEGIRO Portfolio History fills a critical gap: view your portfolio's historical performance over time with interactive charts and graphs. While DEGIRO doesn't provide historical portfolio visualization, this app imports your account data and transaction history to build a complete picture of your portfolio performance, holdings, and market comparisons.
 
 ## Installation
 
@@ -58,10 +58,10 @@ Tip: when importing for the first time, upload both files using the same full da
 
 ## Preview
 
-### Desktop preview
+### Desktop view
 ![Desktop preview](docs/desktop.gif)
 
-### Mobile preview
+### Mobile view
 <img src="docs/mobile.gif" alt="Mobile preview" width="280" />
 
-See [docs](docs/) for additional screenshots.
+For more screenshots, browse the [docs folder](docs/).
