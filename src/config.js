@@ -2,7 +2,8 @@ const path = require('path');
 
 const config = {
   // Paths
-  DB_PATH: process.env.DEGIRO_PORTFOLIO_DB || path.join(__dirname, '..', 'degiro_portfolio.db'),
+  DB_DIR: process.env.DEGIRO_PORTFOLIO_DB_DIR || '/config',
+  DB_PATH: process.env.DEGIRO_PORTFOLIO_DB || path.join(process.env.DEGIRO_PORTFOLIO_DB_DIR || '/config', 'degiro_portfolio.db'),
 
   // Server
   HOST: process.env.DEGIRO_PORTFOLIO_HOST || '0.0.0.0',
