@@ -1,6 +1,11 @@
 # DEGIRO Portfolio History
 
-DEGIRO Portfolio History fills a critical gap: view your portfolio's historical performance over time with interactive charts and graphs. While DEGIRO doesn't provide historical portfolio visualization, this app imports your account data and transaction history to build a complete picture of your portfolio performance, holdings, and market comparisons.
+This application attempts to fill a gaping hole in DEGIRO's app's functionality: a history graph.
+
+Features:
+- A graph showing the value of your portfolio through time
+- The content of your portfolio at that time, with that day's gains or losses
+- A clear overview of your deposits and withdrawals
 
 ![Desktop preview](docs/desktop.gif)
 
