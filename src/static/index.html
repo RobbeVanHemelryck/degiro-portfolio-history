@@ -1419,35 +1419,7 @@
             </div>
         </div>
 
-        <div id="holdings-container" class="portfolio-summary panel" style="display: none;">
-            <div class="panel-header">
-                <h3 class="panel-title">Holdings</h3>
-                <button class="panel-toggle" type="button" aria-label="Toggle Holdings" aria-expanded="true" onclick="togglePanel(this)">
-                    <span class="panel-caret">▾</span>
-                </button>
-            </div>
-            <div class="panel-content">
-                <div class="panel-content-inner">
-                    <div id="market-data-status" style="padding: 6px 8px 12px 8px; color: #718096; font-size: 0.9em;"></div>
-                    <div id="holdings-grid" class="holdings-grid"></div>
-                </div>
-            </div>
-        </div>
 
-        <div id="chart-section" class="chart-container" style="display: none;">
-            <div id="chart-title" class="chart-title">Stock Chart</div>
-            <div id="stats-grid" class="stats-grid"></div>
-            <div id="chart-area">
-                <div id="chart"></div>
-                <div class="chart-subtitle">Tranches</div>
-                <div id="tranche-chart"></div>
-                <div id="tranche-list" class="tranche-list"></div>
-                <div class="chart-subtitle">Position Value %</div>
-                <div id="position-percentage-chart"></div>
-                <div class="chart-subtitle">Index Comparison</div>
-                <div id="index-chart"></div>
-            </div>
-        </div>
 
         <!-- Portfolio Valuation Chart -->
         <div id="portfolio-chart-section" class="portfolio-summary panel" style="display: none;">
@@ -1947,15 +1919,6 @@
                 }
 
                 document.getElementById('loading').style.display = 'none';
-                document.getElementById('holdings-container').style.display = 'block';
-                loadMarketDataStatus();
-                renderHoldings();
-
-                // Load first stock chart (non-blocking)
-                setLoadingStatus('Loading charts...');
-                if (holdings.length > 0) {
-                    loadStockChart(holdings[0].id);
-                }
             } catch (error) {
                 // Check if server went offline
                 const isOnline = await checkServerStatus();
@@ -3153,14 +3116,27 @@
 
         function ttShiftDate(delta) {
             const input = document.getElementById('tt-date');
-            if (!input.value) return;
-            const d = new Date(input.value);
-            d.setDate(d.getDate() + delta);
-            const newDate = d.toISOString().split('T')[0];
-            if (ttMinDate && newDate < ttMinDate) return;
-            if (ttMaxDate && newDate > ttMaxDate) return;
+            if (!input.value || !portfolioHistoryDates.length) return;
+            const current = input.value;
+            const idx = portfolioHistoryDates.indexOf(current);
+            let nextIdx;
+            if (idx === -1) {
+                // Current date not in list; find nearest in the desired direction
+                if (delta > 0) {
+                    nextIdx = portfolioHistoryDates.findIndex(d => d > current);
+                    if (nextIdx === -1) return; // already past last date
+                } else {
+                    nextIdx = portfolioHistoryDates.slice().reverse().findIndex(d => d < current);
+                    if (nextIdx === -1) return;
+                    nextIdx = portfolioHistoryDates.length - 1 - nextIdx;
+                }
+            } else {
+                nextIdx = idx + delta;
+            }
+            if (nextIdx < 0 || nextIdx >= portfolioHistoryDates.length) return;
+            const newDate = portfolioHistoryDates[nextIdx];
             input.value = newDate;
-            syncHistoryDate(newDate, 'selector');
+            syncHistoryDate(newDate, 'nav');
         }
 
         async function loadTimeTravel(date) {
@@ -3350,17 +3326,9 @@
                         }
                     });
 
-                    // Re-render holdings to show updated prices
-                    renderHoldings();
-
                     // Update portfolio summary and valuation chart with new prices
                     await loadPortfolioSummary();
                     await loadPortfolioValuationChart();
-
-                    // If a stock chart is currently displayed, reload it to show updated prices
-                    if (selectedStockId !== null) {
-                        await loadStockChart(selectedStockId);
-                    }
 
                     // Live prices are active; holdings and summary have been refreshed.
                     livePricesEnabled = true;
