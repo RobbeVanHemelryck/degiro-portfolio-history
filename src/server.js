@@ -11,10 +11,99 @@ const app = express();
 const upload = multer({ storage: multer.memoryStorage(), limits: { fileSize: 50 * 1024 * 1024 } });
 
 const SERVER_START_TIME = Date.now();
+const HOURLY_LIVE_REFRESH_MS = 60 * 60 * 1000;
+let hourlyLiveRefreshInterval = null;
+let hourlyLiveRefreshRunning = false;
 
 // Serve static files
 app.use('/static', express.static(path.join(__dirname, 'static')));
 app.use(express.json());
+
+function persistLivePriceSnapshot(db, stock, quote) {
+  if (!quote || quote.price == null) return null;
+
+  // Keep intraday snapshots at second precision for stable ordering and compact storage.
+  const timestamp = new Date().toISOString().replace(/\.\d{3}Z$/, 'Z');
+  db.prepare(`
+    INSERT INTO stock_prices (stock_id, date, open, high, low, close, volume, currency)
+    VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+  `).run(
+    stock.id,
+    timestamp,
+    quote.open ?? quote.price,
+    quote.high ?? quote.price,
+    quote.low ?? quote.price,
+    quote.price,
+    quote.volume || 0,
+    quote.currency || stock.currency
+  );
+
+  return timestamp;
+}
+
+async function collectAndPersistLiveQuotes() {
+  const db = getDb();
+  const holdings = db.prepare(`
+    SELECT s.* FROM stocks s JOIN transactions t ON s.id = t.stock_id
+    GROUP BY s.id HAVING SUM(t.quantity) > 0
+  `).all();
+
+  const quotes = [];
+  const errors = [];
+
+  for (const stock of holdings) {
+    if (!stock.yahoo_ticker) {
+      errors.push(`No ticker for ${stock.name}`);
+      continue;
+    }
+
+    const quote = await fetchLiveQuote(stock.yahoo_ticker);
+    if (!quote) {
+      errors.push(`No quote for ${stock.name}`);
+      continue;
+    }
+
+    const persistedAt = persistLivePriceSnapshot(db, stock, quote);
+    quotes.push({
+      stock_id: stock.id,
+      name: stock.name,
+      symbol: stock.symbol,
+      ticker: stock.yahoo_ticker,
+      price: quote.price,
+      change: quote.change || 0,
+      change_percent: quote.change_percent || 0,
+      open: quote.open || 0,
+      high: quote.high || 0,
+      low: quote.low || 0,
+      volume: quote.volume || 0,
+      timestamp: persistedAt || quote.timestamp,
+      currency: quote.currency || stock.currency,
+    });
+  }
+
+  return { quotes, errors };
+}
+
+function startHourlyLiveRefreshJob() {
+  if (hourlyLiveRefreshInterval) return;
+
+  hourlyLiveRefreshInterval = setInterval(async () => {
+    if (hourlyLiveRefreshRunning) return;
+
+    hourlyLiveRefreshRunning = true;
+    try {
+      const { quotes, errors } = await collectAndPersistLiveQuotes();
+      const errSuffix = errors.length ? ` (${errors.length} errors)` : '';
+      console.log(`[HourlyLiveRefresh] Saved ${quotes.length} live quotes${errSuffix}`);
+    } catch (err) {
+      console.error('[HourlyLiveRefresh] Failed:', err.message);
+    } finally {
+      hourlyLiveRefreshRunning = false;
+    }
+  }, HOURLY_LIVE_REFRESH_MS);
+
+  console.log(`[HourlyLiveRefresh] Started with ${HOURLY_LIVE_REFRESH_MS / 60000} minute interval`);
+}
 
 // ─── Health ──────────────────────────────────────────────────────────
 app.get('/api/ping', (_req, res) => {
@@ -228,8 +317,8 @@ app.get('/api/stock/:stockId/chart-data', (req, res) => {
   // Index comparison
   const indicesData = [];
   if (prices.length) {
-    const startDate = prices[0].date;
-    const endDate = prices[prices.length - 1].date;
+    const startDate = (prices[0].date || '').split('T')[0];
+    const endDate = (prices[prices.length - 1].date || '').split('T')[0];
     const indices = db.prepare('SELECT * FROM indices').all();
 
     for (const index of indices) {
@@ -267,6 +356,12 @@ app.get('/api/stock/:stockId/chart-data', (req, res) => {
   // Position percentage
   const positionPercentage = [];
   if (prices.length && transactions.length) {
+    const toComparableTs = (value) => {
+      if (!value) return Number.NEGATIVE_INFINITY;
+      if (value.includes('T')) return new Date(value).getTime();
+      return new Date(`${value}T23:59:59.999Z`).getTime();
+    };
+
     const sortedTrans = [...transactions].sort((a, b) => a.date.localeCompare(b.date));
     let transIdx = 0;
     let cumShares = 0;
@@ -281,7 +376,10 @@ app.get('/api/stock/:stockId/chart-data', (req, res) => {
 
     for (const price of prices) {
       const priceDate = price.date;
-      while (transIdx < sortedTrans.length && (sortedTrans[transIdx].date || '').localeCompare(priceDate + 'Z') <= 0) {
+      const priceTs = toComparableTs(priceDate || '');
+      const priceDay = (priceDate || '').split('T')[0];
+
+      while (transIdx < sortedTrans.length && toComparableTs(sortedTrans[transIdx].date || '') <= priceTs) {
         const t = sortedTrans[transIdx];
         cumShares += t.quantity;
         netInvested += t.quantity > 0 ? Math.abs(t.total_eur) : -Math.abs(t.total_eur);
@@ -293,7 +391,7 @@ app.get('/api/stock/:stockId/chart-data', (req, res) => {
         if (price.currency && price.currency !== 'EUR') {
           let exchangeRate = null;
           for (const td of Object.keys(exchangeRateByDate).sort().reverse()) {
-            if (td <= priceDate && exchangeRateByDate[td]) {
+            if (td <= priceDay && exchangeRateByDate[td]) {
               exchangeRate = exchangeRateByDate[td];
               break;
             }
@@ -439,7 +537,7 @@ app.get('/api/portfolio-valuation-history', (_req, res) => {
   const firstDate = allTransactions[0].date?.split('T')[0] || allTransactions[0].date;
 
   const priceDates = db.prepare(
-    'SELECT DISTINCT date FROM stock_prices WHERE date >= ? ORDER BY date'
+    'SELECT DISTINCT substr(date, 1, 10) as date FROM stock_prices WHERE substr(date, 1, 10) >= ? ORDER BY date'
   ).all(firstDate).map((r) => r.date);
 
   if (!priceDates.length) return res.json({ dates: [], invested: [], values: [] });
@@ -449,7 +547,7 @@ app.get('/api/portfolio-valuation-history', (_req, res) => {
   if (today > priceDates[priceDates.length - 1]) priceDates.push(today);
 
   // Load all prices into memory
-  const allPrices = db.prepare('SELECT * FROM stock_prices WHERE date >= ?').all(firstDate);
+  const allPrices = db.prepare('SELECT * FROM stock_prices WHERE substr(date, 1, 10) >= ?').all(firstDate);
   const priceByStock = {};
   for (const p of allPrices) {
     (priceByStock[p.stock_id] = priceByStock[p.stock_id] || []).push(p);
@@ -523,7 +621,8 @@ app.get('/api/portfolio-valuation-history', (_req, res) => {
       let priceClose = null;
       let priceCurrency = null;
       for (let i = prices.length - 1; i >= 0; i--) {
-        if (prices[i].date <= priceDate) {
+        const priceDay = (prices[i].date || '').split('T')[0];
+        if (priceDay <= priceDate) {
           priceClose = prices[i].close;
           priceCurrency = prices[i].currency;
           break;
@@ -604,32 +703,7 @@ app.post('/api/upload-transactions', upload.single('file'), async (req, res) => 
 // ─── Refresh live prices ─────────────────────────────────────────────
 app.post('/api/refresh-live-prices', async (_req, res) => {
   try {
-    const db = getDb();
-    const holdings = db.prepare(`
-      SELECT s.* FROM stocks s JOIN transactions t ON s.id = t.stock_id
-      GROUP BY s.id HAVING SUM(t.quantity) > 0
-    `).all();
-
-    const quotes = [];
-    const errors = [];
-
-    for (const stock of holdings) {
-      if (!stock.yahoo_ticker) { errors.push(`No ticker for ${stock.name}`); continue; }
-      const quote = await fetchLiveQuote(stock.yahoo_ticker);
-      if (quote) {
-        quotes.push({
-          stock_id: stock.id, name: stock.name, symbol: stock.symbol,
-          ticker: stock.yahoo_ticker,
-          price: quote.price, change: quote.change || 0,
-          change_percent: quote.change_percent || 0,
-          open: quote.open || 0, high: quote.high || 0, low: quote.low || 0,
-          volume: quote.volume || 0, timestamp: quote.timestamp,
-          currency: quote.currency || stock.currency,
-        });
-      } else {
-        errors.push(`No quote for ${stock.name}`);
-      }
-    }
+    const { quotes, errors } = await collectAndPersistLiveQuotes();
 
     res.json({
       success: true, quotes, count: quotes.length, errors,
@@ -903,7 +977,7 @@ app.get('/api/time-travel', (req, res) => {
 
     // Get price on or before the selected date
     const priceRow = db.prepare(
-      'SELECT * FROM stock_prices WHERE stock_id = ? AND date <= ? ORDER BY date DESC LIMIT 1'
+      'SELECT * FROM stock_prices WHERE stock_id = ? AND substr(date, 1, 10) <= ? ORDER BY date DESC LIMIT 1'
     ).get(stockId, date);
 
     // Get previous day's price (the day before priceRow.date)
@@ -977,7 +1051,7 @@ app.get('/api/time-travel/range', (_req, res) => {
   const latest = db.prepare('SELECT MAX(date) as max_date FROM stock_prices').get();
   res.json({
     min_date: earliest?.min_date?.split('T')[0] || null,
-    max_date: latest?.max_date || null,
+    max_date: latest?.max_date?.split('T')[0] || null,
   });
 });
 
@@ -991,4 +1065,5 @@ app.post('/api/shutdown', (_req, res) => {
 initDb();
 app.listen(config.PORT, config.HOST, () => {
   console.log(`DEGIRO Portfolio running on http://${config.HOST}:${config.PORT}`);
+  startHourlyLiveRefreshJob();
 });
