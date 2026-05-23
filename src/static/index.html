@@ -15,6 +15,11 @@
             box-sizing: border-box;
         }
 
+        html,
+        body {
+            touch-action: manipulation;
+        }
+
         body {
             font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
             background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
@@ -459,10 +464,15 @@
             padding: 0 8px;
         }
 
+        #portfolio-chart-section .graph-overview,
         #portfolio-chart-section .tt-date-picker,
         #portfolio-chart-section #tt-content {
             padding-left: 8px;
             padding-right: 8px;
+        }
+
+        #portfolio-history-section .panel-content-inner {
+            padding: 0 8px;
         }
 
         .stats-grid {
@@ -888,6 +898,115 @@
             color: #fc8181;
         }
 
+        .graph-overview {
+            display: flex;
+            align-items: flex-end;
+            justify-content: space-between;
+            gap: 16px;
+            margin-bottom: 10px;
+            flex-wrap: wrap;
+        }
+
+        .graph-overview-label {
+            color: #718096;
+            font-size: 0.74em;
+            text-transform: uppercase;
+            letter-spacing: 0.08em;
+            font-weight: 700;
+            margin-bottom: 4px;
+        }
+
+        .graph-overview-value {
+            color: #2d3748;
+            font-size: 2em;
+            font-weight: 700;
+            line-height: 1.05;
+        }
+
+        .graph-overview-meta {
+            color: #718096;
+            font-size: 0.85em;
+            margin-top: 4px;
+        }
+
+        .graph-overview-change {
+            font-size: 1.15em;
+            font-weight: 700;
+            white-space: nowrap;
+        }
+
+        .graph-overview-change.positive {
+            color: #48bb78;
+        }
+
+        .graph-overview-change.negative {
+            color: #fc8181;
+        }
+
+        .history-table-wrap {
+            overflow-x: auto;
+        }
+
+        .history-table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 0.88em;
+        }
+
+        .history-table th,
+        .history-table td {
+            padding: 10px 12px;
+            border-bottom: 1px solid #e2e8f0;
+            text-align: right;
+            white-space: nowrap;
+        }
+
+        .history-table th {
+            color: #718096;
+            font-size: 0.76em;
+            text-transform: uppercase;
+            letter-spacing: 0.06em;
+            font-weight: 700;
+        }
+
+        .history-table th:first-child,
+        .history-table td:first-child {
+            text-align: left;
+        }
+
+        .history-table tbody tr:last-child td {
+            border-bottom: none;
+        }
+
+        .history-month {
+            font-weight: 600;
+            color: #2d3748;
+        }
+
+        .history-year-row {
+            background: linear-gradient(135deg, #667eea15 0%, #764ba215 100%);
+            border-top: 2px solid #667eea;
+            border-bottom: 2px solid #667eea;
+        }
+
+        .history-year-row td {
+            font-weight: 700;
+            color: #667eea;
+            padding: 12px;
+        }
+
+        .history-gain.positive,
+        .history-pct.positive {
+            color: #48bb78;
+            font-weight: 700;
+        }
+
+        .history-gain.negative,
+        .history-pct.negative {
+            color: #fc8181;
+            font-weight: 700;
+        }
+
         /* Server offline styles */
         .server-offline-banner {
             background: linear-gradient(135deg, #f56565 0%, #c53030 100%);
@@ -1141,6 +1260,21 @@
                 padding-left: 6px;
             }
 
+            .graph-overview {
+                align-items: flex-start;
+                flex-direction: column;
+                gap: 8px;
+                margin-bottom: 8px;
+            }
+
+            .graph-overview-value {
+                font-size: 1.6em;
+            }
+
+            .graph-overview-change {
+                font-size: 1em;
+            }
+
             .chart-subtitle {
                 font-size: 1.2em;
             }
@@ -1161,14 +1295,22 @@
                 display: none;
             }
 
-            .tt-date-input {
-                font-size: 0.85em;
-                padding: 4px 6px;
+            .tt-date-picker {
+                gap: 6px;
             }
 
-            .tt-date-picker {
-                grid-template-columns: auto 140px auto;
-                gap: 6px;
+            .tt-date-button {
+                font-size: 0.78em;
+                padding: 6px 10px;
+            }
+
+            .history-table {
+                font-size: 0.8em;
+            }
+
+            .history-table th,
+            .history-table td {
+                padding: 8px 10px;
             }
 
             .tt-header-value {
@@ -1182,30 +1324,53 @@
 
         /* Time Travel Panel */
         .tt-date-picker {
-            display: grid;
-            grid-template-columns: auto 160px auto;
+            display: flex;
             align-items: center;
+            justify-content: center;
+            flex-wrap: wrap;
             gap: 10px;
-            margin-bottom: 16px;
-            width: fit-content;
+            margin: 12px auto 16px;
+            width: 100%;
             margin-left: auto;
             margin-right: auto;
         }
 
-        .tt-date-input {
-            width: 100%;
-            padding: 8px 12px;
-            border: 2px solid #e2e8f0;
-            border-radius: 8px;
-            font-size: 0.95em;
-            font-family: inherit;
-            color: #2d3748;
-            transition: border-color 0.2s;
-            background: white;
+        .tt-date-field {
+            position: relative;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
         }
 
-        .tt-date-input:focus {
-            outline: none;
+        .tt-date-button {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            min-width: 0;
+            padding: 8px 12px;
+            border: 2px solid #e2e8f0;
+            border-radius: 999px;
+            font-size: 0.82em;
+            font-weight: 700;
+            color: #2d3748;
+            background: white;
+            white-space: nowrap;
+            transition: border-color 0.2s, box-shadow 0.2s;
+        }
+
+        .tt-date-input {
+            position: absolute;
+            inset: 0;
+            opacity: 0;
+            cursor: pointer;
+            appearance: none;
+            -webkit-appearance: none;
+            border: 0;
+            margin: 0;
+            padding: 0;
+        }
+
+        .tt-date-field:focus-within .tt-date-button {
             border-color: #667eea;
             box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.15);
         }
@@ -1259,15 +1424,45 @@
             color: #fc8181;
         }
 
+        .tt-section-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 10px 0 6px 0;
+            border-bottom: 1px solid #e2e8f0;
+            margin-bottom: 0;
+            cursor: pointer;
+            user-select: none;
+        }
+
         .tt-section-title {
             font-size: 0.85em;
             font-weight: 700;
             color: #718096;
             text-transform: uppercase;
             letter-spacing: 0.5px;
-            padding: 10px 0 6px 0;
-            border-bottom: 1px solid #e2e8f0;
-            margin-bottom: 0;
+        }
+
+        .tt-section-toggle {
+            font-size: 1em;
+            color: #718096;
+            transition: transform 0.2s;
+        }
+
+        .tt-section-toggle.collapsed {
+            transform: rotate(-90deg);
+        }
+
+        .tt-section-content {
+            max-height: 1000px;
+            overflow: hidden;
+            transition: max-height 0.3s ease, opacity 0.3s ease;
+            opacity: 1;
+        }
+
+        .tt-section-content.collapsed {
+            max-height: 0;
+            opacity: 0;
         }
 
         .tt-sort-row {
@@ -1424,20 +1619,38 @@
         <!-- Portfolio Valuation Chart -->
         <div id="portfolio-chart-section" class="portfolio-summary panel" style="display: none;">
             <div class="panel-header">
-                <h3 class="panel-title">History</h3>
-                <button class="panel-toggle" type="button" aria-label="Toggle History" aria-expanded="true" onclick="togglePanel(this)">
+                <h3 class="panel-title">Graph</h3>
+                <button class="panel-toggle" type="button" aria-label="Toggle Graph" aria-expanded="true" onclick="togglePanel(this)">
                     <span class="panel-caret">▾</span>
                 </button>
             </div>
             <div class="panel-content">
                 <div class="panel-content-inner">
-                    <div class="tt-date-picker">
-                        <button class="tt-nav-btn" onclick="ttShiftDate(-1)">◀ Prev</button>
-                        <input type="date" id="tt-date" class="tt-date-input" />
-                        <button class="tt-nav-btn" onclick="ttShiftDate(1)">Next ▶</button>
-                    </div>
+                    <div id="tt-header-display"></div>
                     <div id="portfolio-valuation-chart"></div>
+                    <div class="tt-date-picker">
+                        <button class="tt-nav-btn" type="button" onclick="ttShiftDate(-1)">◀ Prev</button>
+                        <label class="tt-date-field" aria-label="Select history date">
+                            <span id="tt-date-button" class="tt-date-button" aria-hidden="true">Date</span>
+                            <input type="date" id="tt-date" class="tt-date-input" aria-label="Select history date" />
+                        </label>
+                        <button class="tt-nav-btn" type="button" onclick="ttShiftDate(1)">Next ▶</button>
+                    </div>
                     <div id="tt-content"></div>
+                </div>
+            </div>
+        </div>
+
+        <div id="portfolio-history-section" class="portfolio-summary panel" style="display: none;">
+            <div class="panel-header">
+                <h3 class="panel-title">History</h3>
+                <button class="panel-toggle" type="button" aria-label="Toggle History Table" aria-expanded="true" onclick="togglePanel(this)">
+                    <span class="panel-caret">▾</span>
+                </button>
+            </div>
+            <div class="panel-content">
+                <div class="panel-content-inner">
+                    <div id="portfolio-history-table" class="history-table-wrap"></div>
                 </div>
             </div>
         </div>
@@ -1484,6 +1697,7 @@
         let failureCount = 0;     // Track consecutive failures
         const FAILURE_THRESHOLD = 3;  // Require 3 consecutive failures before marking offline
         let uploadInProgress = false;  // Skip server checks during uploads
+        let ttSectionStates = { 'tt-stocks': true, 'tt-trackers': true };  // Track collapsed state (default collapsed)
         // Settings popup
         function openSettingsPopup() {
             const container = document.getElementById('settings-popup-container');
@@ -1513,6 +1727,18 @@
         function closeSettingsPopup(event) {
             if (event && !event.target.classList.contains('settings-popup-overlay')) return;
             document.getElementById('settings-popup-container').innerHTML = '';
+        }
+
+        function toggleTTSection(sectionId) {
+            const content = document.getElementById(`${sectionId}-content`);
+            const toggle = document.getElementById(`${sectionId}-toggle`);
+            if (!content || !toggle) return;
+
+            content.classList.toggle('collapsed');
+            toggle.classList.toggle('collapsed');
+            
+            // Save state
+            ttSectionStates[sectionId] = content.classList.contains('collapsed');
         }
 
         function togglePanel(button) {
@@ -1596,6 +1822,7 @@
                     hideIfExists('portfolio-summary');
                     hideIfExists('portfolio-header');
                     hideIfExists('portfolio-chart-section');
+                    hideIfExists('portfolio-history-section');
                     hideIfExists('cash-movements-section');
                 }
 
@@ -1698,6 +1925,9 @@
             }
         }
 
+        let latestPortfolioSummary = null;
+        let latestPortfolioHistoryData = null;
+
         async function loadPortfolioSummary() {
             try {
                 const response = await fetch('/api/portfolio-summary');
@@ -1761,12 +1991,207 @@
 
                 document.getElementById('summary-grid').innerHTML = summaryHtml;
                 document.getElementById('portfolio-summary').style.display = 'block';
+                latestPortfolioSummary = summary;
 
             } catch (error) {
                 console.error('Failed to load portfolio summary:', error);
                 // Check if server went offline
                 await checkServerStatus();
             }
+        }
+
+        function portfolioNumberClass(value) {
+            if (value > 0) return 'positive';
+            if (value < 0) return 'negative';
+            return '';
+        }
+
+        function formatPortfolioCurrency(value) {
+            return `€${Math.abs(value).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+        }
+
+        function formatSignedPortfolioCurrency(value) {
+            const prefix = value > 0 ? '+' : value < 0 ? '-' : '';
+            return `${prefix}${formatPortfolioCurrency(value)}`;
+        }
+
+        function formatSignedPortfolioPercent(value) {
+            const prefix = value > 0 ? '+' : value < 0 ? '-' : '';
+            return `${prefix}${Math.abs(value).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}%`;
+        }
+
+        function formatPortfolioMonth(date) {
+            return new Date(date + 'T00:00:00').toLocaleDateString('en-US', {
+                month: 'short',
+                year: 'numeric',
+            });
+        }
+
+        function renderPortfolioGraphOverview(data) {
+            const container = document.getElementById('portfolio-graph-overview');
+            if (!container || !data.values.length || !data.invested.length) return;
+
+            const lastIndex = data.values.length - 1;
+            const currentValue = latestPortfolioSummary?.current_value ?? data.values[lastIndex] ?? 0;
+            const gainLoss = latestPortfolioSummary?.gain_loss ?? (currentValue - (data.invested[lastIndex] || 0));
+            const gainLossPct = latestPortfolioSummary?.gain_loss_percent ?? ((data.invested[lastIndex] || 0) > 0
+                ? (gainLoss / (data.invested[lastIndex] || 0)) * 100
+                : 0);
+            const gainLossClass = portfolioNumberClass(gainLoss);
+
+            container.innerHTML = `
+                <div>
+                    <div class="graph-overview-label">Portfolio Value</div>
+                    <div class="graph-overview-value">${formatPortfolioCurrency(currentValue)}</div>
+                    <div class="graph-overview-meta">As of ${data.dates[lastIndex]}</div>
+                </div>
+                <div class="graph-overview-change ${gainLossClass}">
+                    ${formatSignedPortfolioPercent(gainLossPct)}
+                    <span class="graph-overview-meta">(${formatSignedPortfolioCurrency(gainLoss)})</span>
+                </div>
+            `;
+        }
+
+        function buildPortfolioHistoryRows(data) {
+            // Get last day value for each month (month-end)
+            const monthEndSnapshots = new Map();
+
+            data.dates.forEach((date, index) => {
+                const monthKey = date.slice(0, 7);
+                // Always overwrite to keep the last occurrence (latest date) for each month
+                monthEndSnapshots.set(monthKey, {
+                    date,
+                    value: data.values[index] || 0,
+                    invested: data.invested[index] || 0,
+                });
+            });
+
+            const sortedMonths = Array.from(monthEndSnapshots.entries())
+                .sort((a, b) => a[0].localeCompare(b[0]));
+
+            const rows = [];
+            const yearTotals = new Map();
+
+            for (let i = 0; i < sortedMonths.length; i++) {
+                const [monthKey, snapshot] = sortedMonths[i];
+                const year = monthKey.slice(0, 4);
+                
+                let gainLoss = 0;
+                let gainLossPct = 0;
+                let prevValue = 0;
+
+                if (i > 0) {
+                    // Compare with previous month's value
+                    prevValue = sortedMonths[i - 1][1].value;
+                    gainLoss = snapshot.value - prevValue;
+                    gainLossPct = prevValue > 0 ? (gainLoss / prevValue) * 100 : 0;
+                } else {
+                    // First month: no previous value to compare
+                    gainLoss = 0;
+                    gainLossPct = 0;
+                }
+
+                rows.push({
+                    type: 'month',
+                    date: snapshot.date,
+                    monthKey,
+                    year,
+                    value: snapshot.value,
+                    gainLoss,
+                    gainLossPct,
+                });
+
+                // Accumulate year totals
+                if (!yearTotals.has(year)) {
+                    yearTotals.set(year, { gainLoss: 0, startValue: i > 0 ? prevValue : snapshot.value, endValue: snapshot.value });
+                } else {
+                    yearTotals.get(year).endValue = snapshot.value;
+                }
+                yearTotals.get(year).gainLoss += gainLoss;
+            }
+
+            // Insert year total rows and reverse
+            const result = [];
+            let currentYear = null;
+
+            for (let i = rows.length - 1; i >= 0; i--) {
+                const row = rows[i];
+                
+                if (currentYear !== row.year) {
+                    // Add year total row before first month of that year
+                    const yearTotal = yearTotals.get(row.year);
+                    const yearGainLossPct = yearTotal.startValue > 0 
+                        ? (yearTotal.gainLoss / yearTotal.startValue) * 100 
+                        : 0;
+                    
+                    result.push({
+                        type: 'year',
+                        year: row.year,
+                        value: yearTotal.endValue,
+                        gainLoss: yearTotal.gainLoss,
+                        gainLossPct: yearGainLossPct,
+                    });
+                    currentYear = row.year;
+                }
+                
+                result.push(row);
+            }
+
+            return result;
+        }
+
+        function renderPortfolioHistoryTable(data) {
+            const section = document.getElementById('portfolio-history-section');
+            const container = document.getElementById('portfolio-history-table');
+            if (!section || !container) return;
+
+            const rows = buildPortfolioHistoryRows(data);
+            if (!rows.length) {
+                section.style.display = 'none';
+                container.innerHTML = '';
+                return;
+            }
+
+            section.style.display = 'block';
+            container.innerHTML = `
+                <table class="history-table">
+                    <thead>
+                        <tr>
+                            <th>Period</th>
+                            <th>Portfolio Value</th>
+                            <th>Gain / Loss</th>
+                            <th>Gain / Loss %</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        ${rows.map((row) => {
+                            if (row.type === 'year') {
+                                const gainClass = portfolioNumberClass(row.gainLoss);
+                                const pctClass = portfolioNumberClass(row.gainLossPct);
+                                return `
+                                    <tr class="history-year-row">
+                                        <td class="history-month">${row.year} Total</td>
+                                        <td class="history-value">${formatPortfolioCurrency(row.value)}</td>
+                                        <td class="history-gain ${gainClass}">${formatSignedPortfolioCurrency(row.gainLoss)}</td>
+                                        <td class="history-pct ${pctClass}">${formatSignedPortfolioPercent(row.gainLossPct)}</td>
+                                    </tr>
+                                `;
+                            } else {
+                                const gainClass = portfolioNumberClass(row.gainLoss);
+                                const pctClass = portfolioNumberClass(row.gainLossPct);
+                                return `
+                                    <tr>
+                                        <td class="history-month">${formatPortfolioMonth(row.date)}</td>
+                                        <td class="history-value">${formatPortfolioCurrency(row.value)}</td>
+                                        <td class="history-gain ${gainClass}">${formatSignedPortfolioCurrency(row.gainLoss)}</td>
+                                        <td class="history-pct ${pctClass}">${formatSignedPortfolioPercent(row.gainLossPct)}</td>
+                                    </tr>
+                                `;
+                            }
+                        }).join('')}
+                    </tbody>
+                </table>
+            `;
         }
 
         // Load and render portfolio valuation chart
@@ -1780,9 +2205,11 @@
                 }
 
                 portfolioHistoryDates = data.dates;
+                latestPortfolioHistoryData = data;
 
                 // Show the chart section
                 document.getElementById('portfolio-chart-section').style.display = 'block';
+                renderPortfolioHistoryTable(data);
 
                 // Create traces
                 const portfolioTrace = {
@@ -1817,7 +2244,6 @@
 
                 const layout = {
                     xaxis: {
-                        title: 'Date',
                         type: 'date',
                         gridcolor: '#e2e8f0'
                     },
@@ -3090,6 +3516,11 @@
                 input.value = snapped;
             }
 
+            const dateButton = document.getElementById('tt-date-button');
+            if (dateButton) {
+                dateButton.textContent = snapped;
+            }
+
             loadTimeTravel(snapped);
             updateHistoryChartSelection(snapped, source === 'selector');
         }
@@ -3155,9 +3586,11 @@
 
         function renderTimeTravel(data) {
             const container = document.getElementById('tt-content');
+            const headerContainer = document.getElementById('tt-header-display');
 
             if (!data.holdings || data.holdings.length === 0) {
                 container.innerHTML = '<div class="tt-empty">No holdings on this date.</div>';
+                if (headerContainer) headerContainer.innerHTML = '';
                 return;
             }
 
@@ -3202,31 +3635,46 @@
                 `;
             }
 
-            function renderSection(title, items) {
+            function renderSection(title, items, sectionId) {
                 if (!items.length) return '';
+                // Use saved state or default to collapsed
+                const isCollapsed = ttSectionStates[sectionId] !== undefined ? ttSectionStates[sectionId] : true;
+                const collapsedClass = isCollapsed ? ' collapsed' : '';
                 return `
-                    <div class="tt-section-title">${title}</div>
-                    <div class="tt-sort-row">
-                        <span>Koers × Aantal</span>
-                        <span>Dag +/−</span>
-                    </div>
-                    <div class="tt-holdings-list">
-                        ${items.map(renderHoldingRow).join('')}
+                    <div class="tt-section">
+                        <div class="tt-section-header" onclick="toggleTTSection('${sectionId}')">
+                            <div class="tt-section-title">${title}</div>
+                            <span class="tt-section-toggle${collapsedClass}" id="${sectionId}-toggle">▾</span>
+                        </div>
+                        <div class="tt-section-content${collapsedClass}" id="${sectionId}-content">
+                            <div class="tt-sort-row">
+                                <span>Koers × Aantal</span>
+                                <span>Dag +/−</span>
+                            </div>
+                            <div class="tt-holdings-list">
+                                ${items.map(renderHoldingRow).join('')}
+                            </div>
+                        </div>
                     </div>
                 `;
             }
 
             const changeText = `${sign(data.daily_change_eur)}${fmtEur(data.daily_change_eur)} (${sign(data.daily_change_pct)}${Math.abs(data.daily_change_pct).toLocaleString('nl-NL', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}%)`;
 
-            container.innerHTML = `
-                <div class="tt-header">
-                    <div class="tt-header-value">${fmtEur(data.total_value_eur)}</div>
-                    <div class="tt-header-change ${changeCls(data.daily_change_eur)}">
-                        ${changeText}
+            if (headerContainer) {
+                headerContainer.innerHTML = `
+                    <div class="tt-header">
+                        <div class="tt-header-value">${fmtEur(data.total_value_eur)}</div>
+                        <div class="tt-header-change ${changeCls(data.daily_change_eur)}">
+                            ${changeText}
+                        </div>
                     </div>
-                </div>
-                ${renderSection('Stocks', stocks)}
-                ${renderSection("Trackers (ETF's)", trackers)}
+                `;
+            }
+
+            container.innerHTML = `
+                ${renderSection('Stocks', stocks, 'tt-stocks')}
+                ${renderSection("Trackers (ETF's)", trackers, 'tt-trackers')}
             `;
         }
 
