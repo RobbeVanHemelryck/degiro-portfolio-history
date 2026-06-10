@@ -12,6 +12,7 @@ const upload = multer({ storage: multer.memoryStorage(), limits: { fileSize: 50 
 
 const SERVER_START_TIME = Date.now();
 const HOURLY_LIVE_REFRESH_MS = 60 * 60 * 1000;
+const DAY_MS = 24 * 60 * 60 * 1000;
 let hourlyLiveRefreshInterval = null;
 let hourlyLiveRefreshRunning = false;
 
@@ -82,6 +83,75 @@ async function collectAndPersistLiveQuotes() {
   }
 
   return { quotes, errors };
+}
+
+async function backfillHistoricalPricesIfNeeded() {
+  const db = getDb();
+  const today = new Date().toISOString().split('T')[0];
+
+  const latestDaily = db.prepare(
+    'SELECT date FROM stock_prices WHERE date GLOB ? ORDER BY date DESC LIMIT 1'
+  ).get('????-??-??');
+
+  let daysBehind = null;
+  if (latestDaily?.date) {
+    const latestTs = new Date(`${latestDaily.date}T00:00:00Z`).getTime();
+    const todayTs = new Date(`${today}T00:00:00Z`).getTime();
+    daysBehind = Math.floor((todayTs - latestTs) / DAY_MS);
+  }
+
+  // Skip unnecessary historical pulls when data is already current enough.
+  if (latestDaily?.date && daysBehind != null && daysBehind < 2) {
+    return {
+      performed: false,
+      days_behind: daysBehind,
+      latest_daily_date: latestDaily.date,
+      rows_added: 0,
+      stocks_updated: 0,
+      errors: [],
+    };
+  }
+
+  const stocks = db.prepare(`
+    SELECT s.* FROM stocks s JOIN transactions t ON s.id = t.stock_id
+    GROUP BY s.id
+  `).all();
+
+  let rowsAdded = 0;
+  let stocksUpdated = 0;
+  const errors = [];
+
+  for (const stock of stocks) {
+    try {
+      if (!stock.yahoo_ticker) {
+        const ticker = await resolveTickerFromIsin(stock.isin, stock.currency);
+        if (ticker) {
+          db.prepare('UPDATE stocks SET yahoo_ticker = ? WHERE id = ?').run(ticker, stock.id);
+          stock.yahoo_ticker = ticker;
+        } else {
+          errors.push(`No ticker for ${stock.name}`);
+          continue;
+        }
+      }
+
+      const count = await fetchStockPrices(stock);
+      if (count > 0) {
+        rowsAdded += count;
+        stocksUpdated++;
+      }
+    } catch (err) {
+      errors.push(`Error backfilling ${stock.name}: ${err.message}`);
+    }
+  }
+
+  return {
+    performed: true,
+    days_behind: daysBehind,
+    latest_daily_date: latestDaily?.date ?? null,
+    rows_added: rowsAdded,
+    stocks_updated: stocksUpdated,
+    errors,
+  };
 }
 
 function startHourlyLiveRefreshJob() {
@@ -703,10 +773,17 @@ app.post('/api/upload-transactions', upload.single('file'), async (req, res) => 
 // ─── Refresh live prices ─────────────────────────────────────────────
 app.post('/api/refresh-live-prices', async (_req, res) => {
   try {
+    const backfill = await backfillHistoricalPricesIfNeeded();
     const { quotes, errors } = await collectAndPersistLiveQuotes();
 
+    const combinedErrors = [...(backfill.errors || []), ...errors];
+
     res.json({
-      success: true, quotes, count: quotes.length, errors,
+      success: true,
+      quotes,
+      count: quotes.length,
+      errors: combinedErrors,
+      backfill,
       timestamp: new Date().toISOString(), provider: 'yahoo',
     });
   } catch (err) {
@@ -977,15 +1054,22 @@ app.get('/api/time-travel', (req, res) => {
 
     // Get price on or before the selected date
     const priceRow = db.prepare(
-      'SELECT * FROM stock_prices WHERE stock_id = ? AND substr(date, 1, 10) <= ? ORDER BY date DESC LIMIT 1'
+      `SELECT * FROM stock_prices
+       WHERE stock_id = ? AND substr(date, 1, 10) <= ?
+       ORDER BY substr(date, 1, 10) DESC, date DESC
+       LIMIT 1`
     ).get(stockId, date);
 
-    // Get previous day's price (the day before priceRow.date)
+    // Get previous available day's latest price (not an intraday point from the same day)
     let prevPriceRow = null;
     if (priceRow) {
+      const priceDay = (priceRow.date || '').split('T')[0];
       prevPriceRow = db.prepare(
-        'SELECT * FROM stock_prices WHERE stock_id = ? AND date < ? ORDER BY date DESC LIMIT 1'
-      ).get(stockId, priceRow.date);
+        `SELECT * FROM stock_prices
+         WHERE stock_id = ? AND substr(date, 1, 10) < ?
+         ORDER BY substr(date, 1, 10) DESC, date DESC
+         LIMIT 1`
+      ).get(stockId, priceDay);
     }
 
     const price = priceRow?.close ?? null;

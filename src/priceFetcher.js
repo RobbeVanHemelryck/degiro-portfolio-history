@@ -39,14 +39,24 @@ async function fetchStockPrices(stock) {
 
   const db = getDb();
 
-  // Find earliest transaction date for this stock
-  const earliest = db.prepare(
-    'SELECT MIN(date) as min_date FROM transactions WHERE stock_id = ?'
-  ).get(stock.id);
+  // Incremental updates: if we already have daily history, fetch only a recent window
+  // to backfill missed days and absorb minor provider corrections.
+  const latestDaily = db.prepare(
+    'SELECT date FROM stock_prices WHERE stock_id = ? AND date GLOB ? ORDER BY date DESC LIMIT 1'
+  ).get(stock.id, '????-??-??');
 
-  const startDate = earliest?.min_date
-    ? new Date(earliest.min_date)
-    : new Date(Date.now() - 365 * 24 * 60 * 60 * 1000);
+  let startDate;
+  if (latestDaily?.date) {
+    startDate = new Date(`${latestDaily.date}T00:00:00Z`);
+    startDate.setUTCDate(startDate.getUTCDate() - 7);
+  } else {
+    const earliest = db.prepare(
+      'SELECT MIN(date) as min_date FROM transactions WHERE stock_id = ?'
+    ).get(stock.id);
+    startDate = earliest?.min_date
+      ? new Date(earliest.min_date)
+      : new Date(Date.now() - 365 * 24 * 60 * 60 * 1000);
+  }
 
   const endDate = new Date();
 
