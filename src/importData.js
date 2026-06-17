@@ -206,16 +206,20 @@ async function processTransactionFile(buffer, filename) {
 
       const quantity = parseInt(row[col('quantity')]) || 0;
       const price = (parseFloat(row[col('price')]) || 0) / priceScale;
+      const exchangeRate = row[col('exchange_rate')];
+      const feesEur = row[col('fees_eur')];
+      const valueEur = (parseFloat(row[col('value_eur')]) || 0) / eurScale;
+      const totalEur = (parseFloat(row[col('total_eur')]) || 0) / eurScale;
+      const parsedFeesEur = feesEur != null && !isNaN(parseFloat(feesEur)) ? parseFloat(feesEur) / eurScale : null;
+      const transactionId = String(row[col('transaction_id')] ?? '');
 
-      // Check for duplicate
-      const existing = db.prepare(
-        'SELECT id FROM transactions WHERE stock_id = ? AND date = ? AND quantity = ? AND price = ?'
-      ).get(stock.id, transDate, quantity, price);
+      // DEGIRO may split one order into multiple fills with identical
+      // timestamp/quantity/price. Only dedupe when the export provides an id.
+      const existing = transactionId
+        ? db.prepare('SELECT id FROM transactions WHERE stock_id = ? AND transaction_id = ?').get(stock.id, transactionId)
+        : null;
 
       if (!existing) {
-        const exchangeRate = row[col('exchange_rate')];
-        const feesEur = row[col('fees_eur')];
-
         insertTransaction.run(
           stock.id,
           transDate,
@@ -223,12 +227,12 @@ async function processTransactionFile(buffer, filename) {
           quantity,
           price,
           row[col('currency')] || 'EUR',
-          (parseFloat(row[col('value_eur')]) || 0) / eurScale,
-          (parseFloat(row[col('total_eur')]) || 0) / eurScale,
+          valueEur,
+          totalEur,
           row[col('venue')] || '',
           exchangeRate != null && !isNaN(parseFloat(exchangeRate)) ? parseFloat(exchangeRate) / fxScale : null,
-          feesEur != null && !isNaN(parseFloat(feesEur)) ? parseFloat(feesEur) / eurScale : null,
-          String(row[col('transaction_id')] ?? '')
+          parsedFeesEur,
+          transactionId
         );
         newTransactions++;
       }
