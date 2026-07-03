@@ -2408,7 +2408,7 @@
             if (!container) return;
 
             const ranges = [
-                { key: '1D', label: '1D' },
+                { key: '1W', label: '1W' },
                 { key: '1M', label: '1M' },
                 { key: 'YTD', label: 'YTD' },
                 { key: '1Y', label: '1Y' },
@@ -2442,8 +2442,9 @@
                 return [dates[0], lastDate];
             }
 
-            if (rangeKey === '1D') {
-                return [lastDate, lastDate];
+            if (rangeKey === '1W') {
+                const start = addDaysToDate(lastY, lastM, lastD, -7);
+                return [start, lastDate];
             }
 
             if (rangeKey === '1M') {
@@ -2470,6 +2471,12 @@
             const newMonth = totalMonths % 12;
             const newDay = Math.min(d, daysInMonth(newYear, newMonth + 1));
             return `${newYear}-${String(newMonth + 1).padStart(2, '0')}-${String(newDay).padStart(2, '0')}`;
+        }
+
+        function addDaysToDate(y, m, d, days) {
+            const date = new Date(y, m - 1, d);
+            date.setDate(date.getDate() + days);
+            return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}`;
         }
 
         function daysInMonth(year, month) {
@@ -4578,7 +4585,7 @@
     </script>
 
     <script>
-        if ('serviceWorker' in navigator) {
+        if ('serviceWorker' in navigator && window.isSecureContext) {
             window.addEventListener('load', () => {
                 navigator.serviceWorker.register('/service-worker.js')
                     .then((registration) => {
