@@ -1,11 +1,13 @@
-const CACHE_NAME = 'degiro-portfolio-v1';
+const CACHE_NAME = 'degiro-portfolio-v2';
 
 const STATIC_ASSETS = [
   '/',
   '/manifest.json',
-  '/static/favicon.svg',
   '/static/favicon.png',
   '/static/favicon-16x16.png',
+  '/static/icon-192.png',
+  '/static/icon-256.png',
+  '/static/icon-512.png',
 ];
 
 self.addEventListener('install', (event) => {

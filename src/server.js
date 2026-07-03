@@ -1,6 +1,7 @@
 const express = require('express');
 const path = require('path');
 const multer = require('multer');
+const packageJson = require('../package.json');
 const { config } = require('./config');
 const { getDb, initDb } = require('./database');
 const { resolveTickerFromIsin } = require('./tickerResolver');
@@ -15,6 +16,48 @@ const HOURLY_LIVE_REFRESH_MS = 60 * 60 * 1000;
 const DAY_MS = 24 * 60 * 60 * 1000;
 let hourlyLiveRefreshInterval = null;
 let hourlyLiveRefreshRunning = false;
+
+app.set('trust proxy', config.TRUST_PROXY);
+
+function getHostname(hostHeader) {
+  if (!hostHeader) return '';
+  try {
+    return new URL(`http://${hostHeader}`).hostname;
+  } catch (_err) {
+    return hostHeader.split(':')[0];
+  }
+}
+
+function redirectCanonicalOrigin(req, res, next) {
+  if (req.method !== 'GET' && req.method !== 'HEAD') {
+    next();
+    return;
+  }
+
+  if (config.PUBLIC_URL) {
+    const publicUrl = new URL(config.PUBLIC_URL);
+    const expectedProtocol = publicUrl.protocol.slice(0, -1);
+    const expectedHost = publicUrl.host;
+
+    if (req.protocol !== expectedProtocol || req.get('host') !== expectedHost) {
+      const target = new URL(req.originalUrl, publicUrl);
+      res.redirect(308, target.toString());
+      return;
+    }
+  } else {
+    const hostname = getHostname(req.get('host'));
+
+    if (hostname === '0.0.0.0' || hostname === '::') {
+      const target = new URL(req.originalUrl, `${req.protocol}://localhost:${config.PORT}`);
+      res.redirect(308, target.toString());
+      return;
+    }
+  }
+
+  next();
+}
+
+app.use(redirectCanonicalOrigin);
 
 // Serve static files
 app.use('/static', express.static(path.join(__dirname, 'static')));
@@ -356,7 +399,7 @@ app.get('/api/ping', (_req, res) => {
   res.json({
     status: 'ok',
     server: 'DEGIRO Portfolio',
-    version: '0.5.4',
+    version: packageJson.version,
     started: new Date(SERVER_START_TIME).toISOString(),
     uptime_seconds: s,
     uptime,
