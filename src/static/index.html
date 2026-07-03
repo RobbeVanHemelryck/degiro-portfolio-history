@@ -676,6 +676,282 @@
             to { transform: rotate(360deg); }
         }
 
+        @keyframes live-refresh-spin {
+            from { transform: rotate(0deg); }
+            to { transform: rotate(360deg); }
+        }
+
+        /* Include other-brokers toggle in header */
+        .broker-toggle {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            color: #ffffff;
+            font-size: 0.85em;
+            font-weight: 500;
+            cursor: pointer;
+            position: absolute;
+            left: 0;
+            top: 50%;
+            transform: translateY(-50%);
+            white-space: nowrap;
+            user-select: none;
+        }
+
+        .broker-toggle input {
+            display: none;
+        }
+
+        .broker-toggle-slider {
+            position: relative;
+            width: 36px;
+            height: 20px;
+            background: rgba(255, 255, 255, 0.25);
+            border-radius: 20px;
+            transition: background 0.2s;
+            flex-shrink: 0;
+        }
+
+        .broker-toggle input:checked + .broker-toggle-slider {
+            background: #ffffff;
+        }
+
+        .broker-toggle-slider::after {
+            content: '';
+            position: absolute;
+            left: 2px;
+            top: 2px;
+            width: 16px;
+            height: 16px;
+            background: #1098c9;
+            border-radius: 50%;
+            transition: transform 0.2s;
+        }
+
+        .broker-toggle input:checked + .broker-toggle-slider::after {
+            transform: translateX(16px);
+        }
+
+        /* Manual holding modal */
+        .modal-overlay {
+            position: fixed;
+            inset: 0;
+            background: rgba(0, 0, 0, 0.45);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
+            padding: 16px;
+        }
+
+        .modal {
+            background: #ffffff;
+            border-radius: 14px;
+            width: 100%;
+            max-width: 460px;
+            box-shadow: 0 20px 50px rgba(0, 0, 0, 0.25);
+            overflow: hidden;
+        }
+
+        .modal-header {
+            padding: 18px 20px;
+            border-bottom: 1px solid #edf2f7;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .modal-header h3 {
+            margin: 0;
+            font-size: 1.15em;
+            color: #2d3748;
+        }
+
+        .modal-close {
+            background: none;
+            border: none;
+            font-size: 1.4em;
+            color: #a0aec0;
+            cursor: pointer;
+            line-height: 1;
+            padding: 0;
+            width: 32px;
+            height: 32px;
+            border-radius: 8px;
+            transition: background 0.2s, color 0.2s;
+        }
+
+        .modal-close:hover {
+            background: #f7fafc;
+            color: #2d3748;
+        }
+
+        .modal-body {
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            gap: 14px;
+        }
+
+        .form-group {
+            display: flex;
+            flex-direction: column;
+            gap: 5px;
+        }
+
+        .form-group label {
+            font-size: 0.85em;
+            font-weight: 600;
+            color: #4a5568;
+        }
+
+        .form-group input,
+        .form-group select {
+            padding: 10px 12px;
+            border: 1px solid #e2e8f0;
+            border-radius: 8px;
+            font-size: 0.95em;
+            color: #2d3748;
+            background: #ffffff;
+        }
+
+        .form-group input:focus,
+        .form-group select:focus {
+            outline: none;
+            border-color: #1098c9;
+            box-shadow: 0 0 0 3px rgba(16, 152, 201, 0.12);
+        }
+
+        .price-input-toggle {
+            display: flex;
+            gap: 10px;
+            align-items: center;
+        }
+
+        .price-input-toggle label {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            font-size: 0.85em;
+            color: #4a5568;
+            cursor: pointer;
+        }
+
+        .modal-actions {
+            display: flex;
+            justify-content: flex-end;
+            gap: 10px;
+            padding: 0 20px 20px;
+        }
+
+        .modal-actions button {
+            padding: 10px 16px;
+            border-radius: 8px;
+            border: none;
+            font-size: 0.9em;
+            font-weight: 600;
+            cursor: pointer;
+            transition: background 0.2s, transform 0.1s;
+        }
+
+        .modal-actions .btn-primary {
+            background: #1098c9;
+            color: #ffffff;
+        }
+
+        .modal-actions .btn-primary:hover {
+            background: #0e86b0;
+        }
+
+        .modal-actions .btn-secondary {
+            background: #edf2f7;
+            color: #4a5568;
+        }
+
+        .modal-actions .btn-secondary:hover {
+            background: #e2e8f0;
+        }
+
+        /* Other brokers panel */
+        .other-brokers-empty {
+            color: #718096;
+            font-size: 0.9em;
+            padding: 12px 0;
+        }
+
+        .other-brokers-list {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        .other-broker-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 12px 14px;
+            background: #f7fafc;
+            border-radius: 10px;
+            border: 1px solid #edf2f7;
+        }
+
+        .other-broker-row.manual-accent {
+            border-left: 4px solid #1098c9;
+        }
+
+        .other-broker-left {
+            display: flex;
+            flex-direction: column;
+            gap: 2px;
+        }
+
+        .other-broker-name {
+            font-weight: 700;
+            color: #2d3748;
+        }
+
+        .other-broker-meta {
+            font-size: 0.8em;
+            color: #718096;
+        }
+
+        .other-broker-right {
+            text-align: right;
+        }
+
+        .other-broker-value {
+            font-weight: 700;
+            color: #2d3748;
+        }
+
+        .other-broker-change {
+            font-size: 0.85em;
+            font-weight: 600;
+        }
+
+        .other-broker-delete {
+            background: none;
+            border: none;
+            color: #fc8181;
+            cursor: pointer;
+            font-size: 0.85em;
+            font-weight: 600;
+            padding: 4px 8px;
+            border-radius: 6px;
+            margin-left: 8px;
+            transition: background 0.2s;
+        }
+
+        .other-broker-delete:hover {
+            background: #fff5f5;
+        }
+
+        .other-brokers-actions {
+            display: flex;
+            gap: 10px;
+            margin-top: 12px;
+        }
+
         .summary-grid {
             display: grid;
             grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
@@ -1199,6 +1475,16 @@
                 min-height: 40px;
             }
 
+            .broker-toggle {
+                position: static;
+                transform: none;
+                margin-right: auto;
+            }
+
+            .broker-toggle-label {
+                display: none;
+            }
+
             .summary-title-wrap {
                 min-width: 0;
                 width: max-content;
@@ -1493,6 +1779,13 @@
             border-bottom: none;
         }
 
+        .tt-holding-row.manual-holding-row {
+            border-left: 3px solid #1098c9;
+            padding-left: 10px;
+            background: rgba(16, 152, 201, 0.04);
+            border-radius: 6px;
+        }
+
         .tt-holding-left {
             flex: 1;
             min-width: 0;
@@ -1570,6 +1863,11 @@
 
         <div id="portfolio-header" class="portfolio-summary" style="display: none;">
             <div class="summary-header">
+                <label class="broker-toggle" title="Include other-broker holdings in totals and graph">
+                    <input type="checkbox" id="include-other-brokers-toggle" onchange="onIncludeOtherBrokersToggled()">
+                    <span class="broker-toggle-slider"></span>
+                    <span class="broker-toggle-label">Other brokers</span>
+                </label>
                 <div class="summary-title-wrap">
                     <h2>DEGIRO Portfolio</h2>
                 </div>
@@ -1614,7 +1912,26 @@
             </div>
         </div>
 
-
+        <!-- Other Brokers -->
+        <div id="other-brokers-section" class="portfolio-summary panel" style="display: none;">
+            <div class="panel-header">
+                <h3 class="panel-title">Other Brokers</h3>
+                <button class="panel-toggle" type="button" aria-label="Toggle Other Brokers" aria-expanded="true" onclick="togglePanel(this)">
+                    <span class="panel-caret">▾</span>
+                </button>
+            </div>
+            <div class="panel-content">
+                <div class="panel-content-inner">
+                    <div id="other-brokers-content">
+                        <div class="other-brokers-empty">No other-broker holdings added yet.</div>
+                    </div>
+                    <div class="other-brokers-actions">
+                        <button class="upload-btn upload-btn-green" onclick="openAddManualHoldingModal()">Add holding</button>
+                        <button class="upload-btn" onclick="refreshLivePrices(true)">Refresh prices</button>
+                    </div>
+                </div>
+            </div>
+        </div>
 
         <!-- Portfolio Valuation Chart -->
         <div id="portfolio-chart-section" class="portfolio-summary panel" style="display: none;">
@@ -1689,6 +2006,9 @@
     <!-- Settings Popup (populated by JS) -->
     <div id="settings-popup-container"></div>
 
+    <!-- Manual holding modal (populated by JS) -->
+    <div id="manual-holding-modal-container"></div>
+
     <script>
         let holdings = [];
         let selectedStockId = null;
@@ -1697,7 +2017,17 @@
         let failureCount = 0;     // Track consecutive failures
         const FAILURE_THRESHOLD = 3;  // Require 3 consecutive failures before marking offline
         let uploadInProgress = false;  // Skip server checks during uploads
-        let ttSectionStates = { 'tt-stocks': true, 'tt-trackers': true };  // Track collapsed state (default collapsed)
+        let ttSectionStates = { 'tt-stocks': true, 'tt-trackers': true, 'tt-other-brokers': true };  // default collapsed
+        let serverConfig = null;
+        let includeOtherBrokers = false;
+
+        function getIncludeOtherBrokers() {
+            return includeOtherBrokers;
+        }
+
+        function otherBrokersQueryParam() {
+            return includeOtherBrokers ? '?includeOtherBrokers=1' : '';
+        }
         // Settings popup
         function openSettingsPopup() {
             const container = document.getElementById('settings-popup-container');
@@ -1711,6 +2041,9 @@
                             </button>
                             <button class="upload-btn upload-btn-green" onclick="closeSettingsPopup(); document.getElementById('account-file-input').click();">
                                 Upload account statement
+                            </button>
+                            <button class="upload-btn" onclick="closeSettingsPopup(); openAddManualHoldingModal();">
+                                Add other-broker holding
                             </button>
                             <button class="upload-btn" onclick="closeSettingsPopup(); updateMarketData();">
                                 Update market data
@@ -1930,7 +2263,7 @@
 
         async function loadPortfolioSummary() {
             try {
-                const response = await fetch('/api/portfolio-summary');
+                const response = await fetch(`/api/portfolio-summary${otherBrokersQueryParam()}`);
                 const summary = await response.json();
 
                 const fmt = (v) => Math.abs(v).toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2});
@@ -1938,6 +2271,10 @@
                 const cls = (v) => v >= 0 ? 'positive' : 'negative';
 
                 const pct = (v) => v.toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2});
+
+                const otherBrokerHint = summary.other_brokers_count > 0
+                    ? `<div class="summary-calc-line" style="color:#718096;">Other brokers: ${summary.other_brokers_count} pos.</div>`
+                    : '';
 
                 const summaryHtml = `
                     <table class="summary-table">
@@ -1952,6 +2289,7 @@
                                 <div class="summary-label">Currently Invested</div>
                                 <div class="summary-content">
                                     <div class="summary-value">€${fmt(summary.net_invested)}</div>
+                                    ${otherBrokerHint}
                                 </div>
                             </td>
                             <td>
@@ -2197,7 +2535,7 @@
         // Load and render portfolio valuation chart
         async function loadPortfolioValuationChart() {
             try {
-                const response = await fetch('/api/portfolio-valuation-history');
+                const response = await fetch(`/api/portfolio-valuation-history${otherBrokersQueryParam()}`);
                 const data = await response.json();
 
                 if (data.dates.length === 0) {
@@ -2329,7 +2667,7 @@
                 // Fetch exchange rates and holdings in parallel
                 const [, holdingsResp] = await Promise.all([
                     fetchExchangeRates(),
-                    fetch('/api/holdings')
+                    fetch(`/api/holdings${otherBrokersQueryParam()}`)
                 ]);
 
                 const data = await holdingsResp.json();
@@ -3575,7 +3913,7 @@
             container.innerHTML = '<div class="tt-loading">Loading portfolio snapshot...</div>';
 
             try {
-                const resp = await fetch(`/api/time-travel?date=${encodeURIComponent(date)}`);
+                const resp = await fetch(`/api/time-travel?date=${encodeURIComponent(date)}${includeOtherBrokers ? '&includeOtherBrokers=1' : ''}`);
                 const data = await resp.json();
                 renderTimeTravel(data);
             } catch (err) {
@@ -3603,8 +3941,10 @@
             const trackerKeywords = ['ETF', 'UCITS', 'Tracker', 'iShares', 'Vanguard', 'SPDR', 'Amundi', 'Xtrackers', 'Lyxor'];
             const isTracker = (h) => trackerKeywords.some(kw => (h.name || '').toLowerCase().includes(kw.toLowerCase()));
 
-            const stocks = data.holdings.filter(h => !isTracker(h));
-            const trackers = data.holdings.filter(h => isTracker(h));
+            const manualHoldings = data.holdings.filter(h => h.is_manual);
+            const nonManual = data.holdings.filter(h => !h.is_manual);
+            const stocks = nonManual.filter(h => !isTracker(h));
+            const trackers = nonManual.filter(h => isTracker(h));
 
             function renderHoldingRow(h) {
                 const priceStr = h.price != null ? formatPrice(h.price, h.currency) : '—';
@@ -3622,7 +3962,7 @@
                 }
 
                 return `
-                    <div class="tt-holding-row">
+                    <div class="tt-holding-row ${h.is_manual ? 'manual-holding-row' : ''}">
                         <div class="tt-holding-left">
                             <div class="tt-holding-name">${h.name}</div>
                             <div class="tt-holding-meta">${metaLine}</div>
@@ -3675,6 +4015,7 @@
             container.innerHTML = `
                 ${renderSection('Stocks', stocks, 'tt-stocks')}
                 ${renderSection("Trackers (ETF's)", trackers, 'tt-trackers')}
+                ${renderSection('Other brokers', manualHoldings, 'tt-other-brokers')}
             `;
         }
 
@@ -3777,6 +4118,7 @@
                     // Update portfolio summary and valuation chart with new prices
                     await loadPortfolioSummary();
                     await loadPortfolioValuationChart();
+                    await loadOtherBrokersPanel();
 
                     // Live prices are active; holdings and summary have been refreshed.
                     livePricesEnabled = true;
@@ -3819,6 +4161,247 @@
             }
         }
 
+        // ─── Other-broker holdings UI ────────────────────────────────────────
+
+        async function fetchServerConfig() {
+            try {
+                const resp = await fetch('/api/config');
+                serverConfig = await resp.json();
+            } catch (err) {
+                console.error('Failed to load server config:', err);
+                serverConfig = { include_other_brokers_default: false };
+            }
+        }
+
+        function initIncludeOtherBrokersToggle() {
+            const saved = localStorage.getItem('includeOtherBrokers');
+            if (saved !== null) {
+                includeOtherBrokers = saved === 'true';
+            } else if (serverConfig) {
+                includeOtherBrokers = !!serverConfig.include_other_brokers_default;
+            }
+            const toggle = document.getElementById('include-other-brokers-toggle');
+            if (toggle) toggle.checked = includeOtherBrokers;
+        }
+
+        async function onIncludeOtherBrokersToggled() {
+            const toggle = document.getElementById('include-other-brokers-toggle');
+            includeOtherBrokers = toggle ? toggle.checked : false;
+            localStorage.setItem('includeOtherBrokers', String(includeOtherBrokers));
+
+            await Promise.all([
+                loadPortfolioSummary(),
+                loadPortfolioValuationChart(),
+                loadHoldings(),
+                refreshTimeTravel(),
+            ]);
+        }
+
+        async function refreshTimeTravel() {
+            const input = document.getElementById('tt-date');
+            if (input && input.value) {
+                await loadTimeTravel(input.value);
+            }
+        }
+
+        function openAddManualHoldingModal() {
+            const container = document.getElementById('manual-holding-modal-container');
+            if (!container) return;
+            container.innerHTML = `
+                <div class="modal-overlay" onclick="closeManualHoldingModal(event)">
+                    <div class="modal" onclick="event.stopPropagation()">
+                        <div class="modal-header">
+                            <h3>Add other-broker holding</h3>
+                            <button class="modal-close" onclick="closeManualHoldingModal()">×</button>
+                        </div>
+                        <div class="modal-body">
+                            <div class="form-group">
+                                <label for="mh-name">Name</label>
+                                <input type="text" id="mh-name" placeholder="e.g. Vanguard FTSE All-World" />
+                            </div>
+                            <div class="form-group">
+                                <label for="mh-ticker">Yahoo ticker</label>
+                                <input type="text" id="mh-ticker" placeholder="e.g. VWCE.DE" />
+                            </div>
+                            <div class="form-group">
+                                <label for="mh-quantity">Quantity</label>
+                                <input type="number" id="mh-quantity" step="0.001" min="0" placeholder="10" />
+                            </div>
+                            <div class="form-group">
+                                <label>Price input</label>
+                                <div class="price-input-toggle">
+                                    <label>
+                                        <input type="radio" name="mh-price-mode" value="total" checked onchange="toggleManualHoldingPriceMode()" />
+                                        Total amount
+                                    </label>
+                                    <label>
+                                        <input type="radio" name="mh-price-mode" value="per-share" onchange="toggleManualHoldingPriceMode()" />
+                                        Per share
+                                    </label>
+                                </div>
+                            </div>
+                            <div class="form-group">
+                                <label for="mh-price" id="mh-price-label">Total amount (€)</label>
+                                <input type="number" id="mh-price" step="0.01" min="0" placeholder="10000" />
+                            </div>
+                            <div class="form-group">
+                                <label for="mh-date">Purchase date</label>
+                                <input type="date" id="mh-date" value="${new Date().toISOString().split('T')[0]}" />
+                            </div>
+                            <div class="form-group">
+                                <label for="mh-broker">Broker (optional)</label>
+                                <input type="text" id="mh-broker" placeholder="e.g. Bolero" />
+                            </div>
+                        </div>
+                        <div class="modal-actions">
+                            <button class="btn-secondary" onclick="closeManualHoldingModal()">Cancel</button>
+                            <button class="btn-primary" onclick="submitManualHolding()">Add holding</button>
+                        </div>
+                    </div>
+                </div>
+            `;
+        }
+
+        function closeManualHoldingModal(event) {
+            if (event && !event.target.classList.contains('modal-overlay')) return;
+            const container = document.getElementById('manual-holding-modal-container');
+            if (container) container.innerHTML = '';
+        }
+
+        function toggleManualHoldingPriceMode() {
+            const mode = document.querySelector('input[name="mh-price-mode"]:checked')?.value || 'total';
+            const label = document.getElementById('mh-price-label');
+            if (label) {
+                label.textContent = mode === 'total' ? 'Total amount (€)' : 'Price per share (€)';
+            }
+        }
+
+        async function submitManualHolding() {
+            const name = document.getElementById('mh-name')?.value.trim();
+            const ticker = document.getElementById('mh-ticker')?.value.trim();
+            const quantity = parseFloat(document.getElementById('mh-quantity')?.value);
+            const price = parseFloat(document.getElementById('mh-price')?.value);
+            const date = document.getElementById('mh-date')?.value;
+            const broker = document.getElementById('mh-broker')?.value.trim();
+            const mode = document.querySelector('input[name="mh-price-mode"]:checked')?.value || 'total';
+
+            if (!name || !ticker || !quantity || quantity <= 0 || !price || price <= 0 || !date) {
+                alert('Please fill in all required fields with valid values.');
+                return;
+            }
+
+            const body = {
+                display_name: name,
+                yahoo_ticker: ticker,
+                quantity,
+                purchase_date: date,
+                broker: broker || undefined,
+            };
+            if (mode === 'total') {
+                body.purchase_price_total = price;
+            } else {
+                body.purchase_price_per_share = price;
+            }
+
+            try {
+                const resp = await fetch('/api/manual-holdings', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(body),
+                });
+                const result = await resp.json();
+                if (!result.success) {
+                    alert(result.message || 'Failed to add holding');
+                    return;
+                }
+                closeManualHoldingModal();
+                await refreshOtherBrokersData();
+            } catch (err) {
+                console.error('Submit manual holding error:', err);
+                alert('Error adding holding: ' + err.message);
+            }
+        }
+
+        async function deleteManualHolding(id) {
+            if (!confirm('Are you sure you want to delete this holding?')) return;
+            try {
+                const resp = await fetch(`/api/manual-holdings/${encodeURIComponent(id)}`, { method: 'DELETE' });
+                const result = await resp.json();
+                if (!result.success) {
+                    alert(result.message || 'Failed to delete holding');
+                    return;
+                }
+                await refreshOtherBrokersData();
+            } catch (err) {
+                console.error('Delete manual holding error:', err);
+                alert('Error deleting holding: ' + err.message);
+            }
+        }
+
+        async function loadOtherBrokersPanel() {
+            const section = document.getElementById('other-brokers-section');
+            const container = document.getElementById('other-brokers-content');
+            if (!section || !container) return;
+
+            try {
+                const resp = await fetch('/api/manual-holdings');
+                const data = await resp.json();
+                const holdings = data.holdings || [];
+
+                if (holdings.length === 0) {
+                    section.style.display = 'block';
+                    container.innerHTML = '<div class="other-brokers-empty">No other-broker holdings added yet. Use “Add holding” below.</div>';
+                    return;
+                }
+
+                section.style.display = 'block';
+                const fmtEur = (v) => '€ ' + Math.abs(v).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+                const sign = (v) => v > 0 ? '+' : (v < 0 ? '-' : '');
+                const cls = (v) => v >= 0 ? 'positive' : 'negative';
+
+                container.innerHTML = `
+                    <div class="other-brokers-list">
+                        ${holdings.map(h => {
+                            const changeHtml = h.gain_loss_eur != null
+                                ? `<div class="other-broker-change ${cls(h.gain_loss_eur)}">${sign(h.gain_loss_eur)}${fmtEur(h.gain_loss_eur)} (${sign(h.gain_loss_percent)}${Math.abs(h.gain_loss_percent).toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2})}%)</div>`
+                                : '';
+                            const dayChangeHtml = h.price_change_pct != null
+                                ? `<div class="other-broker-change ${cls(h.price_change_pct)}">1d: ${sign(h.price_change_pct)}${Math.abs(h.price_change_pct).toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2})}%</div>`
+                                : '';
+                            return `
+                                <div class="other-broker-row manual-accent">
+                                    <div class="other-broker-left">
+                                        <div class="other-broker-name">${h.name}</div>
+                                        <div class="other-broker-meta">${h.symbol} · ${h.shares} shares · Cost ${fmtEur(h.cost_basis_eur)} · ${h.broker || 'Other'}</div>
+                                    </div>
+                                    <div class="other-broker-right">
+                                        <div class="other-broker-value">${h.total_value_eur != null ? fmtEur(h.total_value_eur) : '—'}</div>
+                                        ${changeHtml}
+                                        ${dayChangeHtml}
+                                        <button class="other-broker-delete" onclick="deleteManualHolding(${h.id})">Delete</button>
+                                    </div>
+                                </div>
+                            `;
+                        }).join('')}
+                    </div>
+                `;
+            } catch (err) {
+                console.error('Failed to load other brokers panel:', err);
+            }
+        }
+
+        async function refreshOtherBrokersData() {
+            await loadOtherBrokersPanel();
+            if (includeOtherBrokers) {
+                await Promise.all([
+                    loadPortfolioSummary(),
+                    loadPortfolioValuationChart(),
+                    loadHoldings(),
+                    refreshTimeTravel(),
+                ]);
+            }
+        }
+
         // Initialize
         function setLoadingStatus(text) {
             const el = document.getElementById('loading-status');
@@ -3836,6 +4419,10 @@
                 return;
             }
 
+            // Load server config and set toggle state before fetching data
+            await fetchServerConfig();
+            initIncludeOtherBrokersToggle();
+
             document.getElementById('portfolio-header').style.display = 'block';
 
             // Load summary, portfolio history, and deposits panels.
@@ -3846,6 +4433,7 @@
                 loadPortfolioSummary(),
                 loadCashMovements(),
                 initTimeTravel(),
+                loadOtherBrokersPanel(),
             ]);
 
             // Fetch live quotes for the exact moment of page load and persist them.

@@ -9,6 +9,9 @@ const config = {
   HOST: process.env.DEGIRO_PORTFOLIO_HOST || '0.0.0.0',
   PORT: parseInt(process.env.DEGIRO_PORTFOLIO_PORT || '8000', 10),
 
+  // Feature flags
+  INCLUDE_OTHER_BROKERS_DEFAULT: process.env.DEGIRO_PORTFOLIO_INCLUDE_OTHER_BROKERS_DEFAULT === '1' || process.env.DEGIRO_PORTFOLIO_INCLUDE_OTHER_BROKERS_DEFAULT === 'true',
+
   // Data provider: 'yahoo' (only yahoo supported in Node version)
   PRICE_DATA_PROVIDER: 'yahoo',
 
