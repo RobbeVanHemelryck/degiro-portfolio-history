@@ -368,6 +368,18 @@ app.get('/', (_req, res) => {
   res.sendFile(path.join(__dirname, 'static', 'index.html'));
 });
 
+// ─── PWA assets ──────────────────────────────────────────────────────
+app.get('/service-worker.js', (_req, res) => {
+  res.setHeader('Service-Worker-Allowed', '/');
+  res.setHeader('Content-Type', 'application/javascript');
+  res.sendFile(path.join(__dirname, 'static', 'service-worker.js'));
+});
+
+app.get('/manifest.json', (_req, res) => {
+  res.setHeader('Content-Type', 'application/manifest+json');
+  res.sendFile(path.join(__dirname, 'static', 'manifest.json'));
+});
+
 // ─── Config ──────────────────────────────────────────────────────────
 app.get('/api/config', (_req, res) => {
   res.json({

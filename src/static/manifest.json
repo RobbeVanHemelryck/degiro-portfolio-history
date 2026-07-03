@@ -1,0 +1,27 @@
+{
+  "name": "DEGIRO Portfolio History",
+  "short_name": "Portfolio",
+  "description": "DEGIRO portfolio tracking and visualization",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#ffffff",
+  "theme_color": "#1098c9",
+  "orientation": "portrait-primary",
+  "icons": [
+    {
+      "src": "/static/favicon.png",
+      "sizes": "32x32",
+      "type": "image/png"
+    },
+    {
+      "src": "/static/favicon-16x16.png",
+      "sizes": "16x16",
+      "type": "image/png"
+    },
+    {
+      "src": "/static/favicon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml"
+    }
+  ]
+}
