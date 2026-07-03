@@ -5,7 +5,7 @@
   "main": "src/server.js",
   "scripts": {
     "start": "node src/server.js",
-    "dev": "node --watch src/server.js"
+    "dev": "DEGIRO_PORTFOLIO_DB_DIR=./data node --watch src/server.js"
   },
   "dependencies": {
     "better-sqlite3": "^11.0.0",
