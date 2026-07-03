@@ -863,6 +863,11 @@ app.get('/api/portfolio-valuation-history', (req, res) => {
       || new Date().toISOString().split('T')[0];
   }
 
+  const manualFirstDate = manualHoldings
+    .filter((m) => m.purchase_date)
+    .sort((a, b) => a.purchase_date.localeCompare(b.purchase_date))[0]?.purchase_date
+    || firstDate;
+
   // Collect all dates from DEGIRO and manual price series
   const dateSet = new Set();
 
@@ -877,7 +882,7 @@ app.get('/api/portfolio-valuation-history', (req, res) => {
     if (m.purchase_date) dateSet.add(m.purchase_date);
     const manualDates = db.prepare(
       'SELECT DISTINCT substr(date, 1, 10) as date FROM manual_holding_prices WHERE manual_holding_id = ? AND substr(date, 1, 10) >= ? ORDER BY date'
-    ).all(m.id, firstDate);
+    ).all(m.id, manualFirstDate);
     for (const r of manualDates) dateSet.add(r.date);
   }
 
@@ -902,7 +907,7 @@ app.get('/api/portfolio-valuation-history', (req, res) => {
   // Load manual prices
   const manualPricesByHolding = {};
   if (includeManual) {
-    const allManualPrices = db.prepare('SELECT * FROM manual_holding_prices WHERE substr(date, 1, 10) >= ?').all(firstDate);
+    const allManualPrices = db.prepare('SELECT * FROM manual_holding_prices WHERE substr(date, 1, 10) >= ?').all(manualFirstDate);
     for (const p of allManualPrices) {
       (manualPricesByHolding[p.manual_holding_id] = manualPricesByHolding[p.manual_holding_id] || []).push(p);
     }
