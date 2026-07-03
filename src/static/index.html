@@ -331,6 +331,37 @@
             height: 400px;
         }
 
+        .chart-range-bar {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 6px;
+            justify-content: center;
+            margin: 8px 0 12px;
+        }
+
+        .chart-range-btn {
+            background: #f7fafc;
+            border: 1px solid #e2e8f0;
+            color: #4a5568;
+            padding: 5px 12px;
+            border-radius: 6px;
+            font-size: 0.82em;
+            font-weight: 600;
+            cursor: pointer;
+            transition: background 0.2s, border-color 0.2s, color 0.2s;
+        }
+
+        .chart-range-btn:hover {
+            background: #edf2f7;
+            border-color: #cbd5e0;
+        }
+
+        .chart-range-btn.active {
+            background: #1098c9;
+            border-color: #1098c9;
+            color: #ffffff;
+        }
+
         .chart-subtitle {
             font-size: 1em;
             color: #4a5568;
@@ -1944,6 +1975,7 @@
             <div class="panel-content">
                 <div class="panel-content-inner">
                     <div id="tt-header-display"></div>
+                    <div id="chart-range-selector"></div>
                     <div id="portfolio-valuation-chart"></div>
                     <div class="tt-date-picker">
                         <button class="tt-nav-btn" type="button" onclick="ttShiftDate(-1)">◀ Prev</button>
@@ -2020,6 +2052,7 @@
         let ttSectionStates = { 'tt-stocks': true, 'tt-trackers': true, 'tt-other-brokers': true };  // default collapsed
         let serverConfig = null;
         let includeOtherBrokers = false;
+        let selectedChartRange = 'YTD';
 
         function getIncludeOtherBrokers() {
             return includeOtherBrokers;
@@ -2365,6 +2398,95 @@
             });
         }
 
+        function renderChartRangeButtons() {
+            const container = document.getElementById('chart-range-selector');
+            if (!container) return;
+
+            const ranges = [
+                { key: '1D', label: '1D' },
+                { key: '1M', label: '1M' },
+                { key: 'YTD', label: 'YTD' },
+                { key: '1Y', label: '1Y' },
+                { key: '3Y', label: '3Y' },
+                { key: '5Y', label: '5Y' },
+                { key: 'MAX', label: 'MAX' },
+            ];
+
+            container.innerHTML = `
+                <div class="chart-range-bar">
+                    ${ranges.map(r => `
+                        <button
+                            type="button"
+                            class="chart-range-btn ${r.key === selectedChartRange ? 'active' : ''}"
+                            data-range="${r.key}"
+                            onclick="setChartRange('${r.key}')"
+                        >
+                            ${r.label}
+                        </button>
+                    `).join('')}
+                </div>
+            `;
+        }
+
+        function getChartRangeBounds(rangeKey, dates) {
+            if (!dates || dates.length === 0) return [null, null];
+            const lastDate = dates[dates.length - 1];
+            const [lastY, lastM, lastD] = lastDate.split('-').map(Number);
+
+            if (rangeKey === 'MAX') {
+                return [dates[0], lastDate];
+            }
+
+            if (rangeKey === '1D') {
+                return [lastDate, lastDate];
+            }
+
+            if (rangeKey === '1M') {
+                const start = addMonthsToDate(lastY, lastM, lastD, -1);
+                return [start, lastDate];
+            }
+
+            if (rangeKey === 'YTD') {
+                return [`${lastY}-01-01`, lastDate];
+            }
+
+            const yearOffsets = { '1Y': -1, '3Y': -3, '5Y': -5 };
+            if (yearOffsets[rangeKey]) {
+                const start = `${lastY + yearOffsets[rangeKey]}-${String(lastM).padStart(2, '0')}-${String(lastD).padStart(2, '0')}`;
+                return [start, lastDate];
+            }
+
+            return [dates[0], lastDate];
+        }
+
+        function addMonthsToDate(y, m, d, months) {
+            const totalMonths = y * 12 + (m - 1) + months;
+            const newYear = Math.floor(totalMonths / 12);
+            const newMonth = totalMonths % 12;
+            const newDay = Math.min(d, daysInMonth(newYear, newMonth + 1));
+            return `${newYear}-${String(newMonth + 1).padStart(2, '0')}-${String(newDay).padStart(2, '0')}`;
+        }
+
+        function daysInMonth(year, month) {
+            return new Date(year, month, 0).getDate();
+        }
+
+        function setChartRange(rangeKey) {
+            selectedChartRange = rangeKey;
+            renderChartRangeButtons();
+            applyChartRange();
+        }
+
+        function applyChartRange() {
+            if (!latestPortfolioHistoryData?.dates?.length) return;
+            const [start, end] = getChartRangeBounds(selectedChartRange, latestPortfolioHistoryData.dates);
+            if (!start || !end) return;
+
+            Plotly.relayout('portfolio-valuation-chart', {
+                'xaxis.range': [start, end],
+            });
+        }
+
         function renderPortfolioGraphOverview(data) {
             const container = document.getElementById('portfolio-graph-overview');
             if (!container || !data.values.length || !data.invested.length) return;
@@ -2652,6 +2774,9 @@
                         selectedHistoryDate = lastDate;
                         updateHistoryChartSelection(lastDate, false);
                     }
+
+                    renderChartRangeButtons();
+                    applyChartRange();
                 });
 
             } catch (error) {
