@@ -367,6 +367,35 @@
             color: #ffffff;
         }
 
+        .chart-scale-toggle {
+            display: flex;
+            justify-content: center;
+            margin: -4px 0 12px;
+        }
+
+        .chart-scale-btn {
+            background: #ffffff;
+            border: 1px solid #e2e8f0;
+            color: #4a5568;
+            padding: 5px 12px;
+            border-radius: 6px;
+            font-size: 0.82em;
+            font-weight: 600;
+            cursor: pointer;
+            transition: background 0.2s, border-color 0.2s, color 0.2s;
+        }
+
+        .chart-scale-btn:hover {
+            background: #f7fafc;
+            border-color: #cbd5e0;
+        }
+
+        .chart-scale-btn.active {
+            background: #48bb78;
+            border-color: #48bb78;
+            color: #ffffff;
+        }
+
         .chart-subtitle {
             font-size: 1em;
             color: #4a5568;
@@ -1981,6 +2010,7 @@
                 <div class="panel-content-inner">
                     <div id="tt-header-display"></div>
                     <div id="chart-range-selector"></div>
+                    <div id="chart-scale-toggle"></div>
                     <div id="portfolio-valuation-chart"></div>
                     <div class="tt-date-picker">
                         <button class="tt-nav-btn" type="button" onclick="ttShiftDate(-1)">◀ Prev</button>
@@ -2058,6 +2088,7 @@
         let serverConfig = null;
         let includeOtherBrokers = false;
         let selectedChartRange = 'YTD';
+        let chartAutoScale = false;
 
         function getIncludeOtherBrokers() {
             return includeOtherBrokers;
@@ -2491,12 +2522,73 @@
 
         function applyChartRange() {
             if (!latestPortfolioHistoryData?.dates?.length) return;
-            const [start, end] = getChartRangeBounds(selectedChartRange, latestPortfolioHistoryData.dates);
+            const { dates, values, invested } = latestPortfolioHistoryData;
+            const [start, end] = getChartRangeBounds(selectedChartRange, dates);
             if (!start || !end) return;
+
+            // Find visible data window for the selected x-range
+            let startIdx = dates.findIndex((d) => d >= start);
+            let endIdx = dates.length - 1;
+            for (let i = dates.length - 1; i >= 0; i--) {
+                if (dates[i] <= end) { endIdx = i; break; }
+            }
+            if (startIdx === -1) startIdx = 0;
+            if (endIdx < startIdx) endIdx = startIdx;
+
+            const visibleValues = [];
+            for (let i = startIdx; i <= endIdx; i++) {
+                if (values[i] != null) visibleValues.push(values[i]);
+                if (invested[i] != null) visibleValues.push(invested[i]);
+            }
+
+            let yRange;
+            if (visibleValues.length === 0) {
+                yRange = [0, 1];
+            } else {
+                const dataMin = Math.min(...visibleValues);
+                const dataMax = Math.max(...visibleValues);
+                if (chartAutoScale) {
+                    const span = dataMax - dataMin || Math.abs(dataMax) || 1;
+                    const pad = span * 0.05;
+                    yRange = [dataMin - pad, dataMax + pad];
+                } else {
+                    const top = dataMax > 0 ? dataMax * 1.05 : 1;
+                    yRange = [0, top];
+                }
+            }
 
             Plotly.relayout('portfolio-valuation-chart', {
                 'xaxis.range': [start, end],
+                'yaxis.range': yRange,
+                'yaxis.autorange': false,
             });
+        }
+
+        function renderChartScaleToggle() {
+            const container = document.getElementById('chart-scale-toggle');
+            if (!container) return;
+
+            container.innerHTML = `
+                <div class="chart-scale-toggle">
+                    <button
+                        type="button"
+                        class="chart-scale-btn ${chartAutoScale ? 'active' : ''}"
+                        onclick="toggleChartAutoScale()"
+                    >
+                        ${chartAutoScale ? 'Auto scale' : 'From zero'}
+                    </button>
+                </div>
+            `;
+        }
+
+        function toggleChartAutoScale() {
+            chartAutoScale = !chartAutoScale;
+            renderChartScaleToggle();
+            applyChartYAxisScale();
+        }
+
+        function applyChartYAxisScale() {
+            applyChartRange();
         }
 
         function renderPortfolioGraphOverview(data) {
@@ -2723,7 +2815,8 @@
                         title: 'Value (EUR)',
                         gridcolor: '#e2e8f0',
                         tickformat: ',.0f',
-                        tickprefix: '€'
+                        tickprefix: '€',
+                        rangemode: 'tozero'
                     },
                     hovermode: 'x unified',
                     showlegend: true,
@@ -2789,6 +2882,7 @@
 
                     renderChartRangeButtons();
                     applyChartRange();
+                    renderChartScaleToggle();
                 });
 
             } catch (error) {
