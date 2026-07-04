@@ -45,10 +45,15 @@ async function fetchManualHoldingPrices(manualHolding) {
   if (latestDaily?.date) {
     startDate = new Date(`${latestDaily.date}T00:00:00Z`);
     startDate.setUTCDate(startDate.getUTCDate() - 7);
-  } else if (manualHolding.purchase_date) {
-    startDate = new Date(manualHolding.purchase_date);
   } else {
-    startDate = new Date(Date.now() - 365 * 24 * 60 * 60 * 1000);
+    const now = new Date();
+    const yearStart = new Date(now.getFullYear(), 0, 1);
+    if (manualHolding.purchase_date) {
+      const purchaseDate = new Date(manualHolding.purchase_date);
+      startDate = purchaseDate < yearStart ? purchaseDate : yearStart;
+    } else {
+      startDate = yearStart;
+    }
   }
 
   const endDate = new Date();
@@ -164,12 +169,17 @@ async function fetchStockPrices(stock) {
     startDate = new Date(`${latestDaily.date}T00:00:00Z`);
     startDate.setUTCDate(startDate.getUTCDate() - 7);
   } else {
+    const now = new Date();
+    const yearStart = new Date(now.getFullYear(), 0, 1);
     const earliest = db.prepare(
       'SELECT MIN(date) as min_date FROM transactions WHERE stock_id = ?'
     ).get(stock.id);
-    startDate = earliest?.min_date
-      ? new Date(earliest.min_date)
-      : new Date(Date.now() - 365 * 24 * 60 * 60 * 1000);
+    const earliestDate = earliest?.min_date ? new Date(earliest.min_date) : null;
+    if (earliestDate) {
+      startDate = earliestDate < yearStart ? earliestDate : yearStart;
+    } else {
+      startDate = yearStart;
+    }
   }
 
   const endDate = new Date();

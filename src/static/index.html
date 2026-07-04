@@ -757,7 +757,7 @@
             padding: 0;
             line-height: 1;
             position: absolute;
-            right: 38px;
+            right: 68px;
             top: 50%;
             transform: translateY(-50%);
             transition: background 0.2s ease, transform 0.2s ease;
@@ -1922,7 +1922,11 @@
             font-size: 0.75em;
             font-weight: 600;
             margin-top: 2px;
+            color: var(--text);
         }
+
+        .tt-holding-ytd.positive { color: #48bb78; }
+        .tt-holding-ytd.negative { color: #fc8181; }
 
         .tt-holding-left {
             flex: 1;
@@ -2033,7 +2037,7 @@
                 <button id="live-refresh-btn" class="live-refresh-btn" onclick="refreshLivePrices(true)" aria-label="Refresh live prices" title="Refresh live prices">
                     <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M12 6v3l4-4-4-4v3c-4.42 0-8 3.58-8 8 0 1.57.46 3.03 1.24 4.26L6.7 14.8c-.45-.83-.7-1.79-.7-2.8 0-3.31 2.69-6 6-6zm6.76 1.74L17.3 9.2c.44.84.7 1.79.7 2.8 0 3.31-2.69 6-6 6v-3l-4 4 4 4v-3c4.42 0 8-3.58 8-8 0-1.57-.46-3.03-1.24-4.26z"/></svg>
                 </button>
-                <button id="theme-toggle" class="live-refresh-btn" onclick="toggleTheme()" aria-label="Toggle dark mode" title="Toggle dark mode" style="right:4px;">🌙</button>
+                <button id="theme-toggle" class="live-refresh-btn" onclick="toggleTheme()" aria-label="Toggle dark mode" title="Toggle dark mode" style="right:34px;">🌙</button>
             </div>
         </div>
 
@@ -2052,26 +2056,6 @@
         </div>
 
         <!-- Other Brokers -->
-        <div id="other-brokers-section" class="portfolio-summary panel" style="display: none;">
-            <div class="panel-header">
-                <h3 class="panel-title">Other Brokers</h3>
-                <button class="panel-toggle" type="button" aria-label="Toggle Other Brokers" aria-expanded="true" onclick="togglePanel(this)">
-                    <span class="panel-caret">▾</span>
-                </button>
-            </div>
-            <div class="panel-content">
-                <div class="panel-content-inner">
-                    <div id="other-brokers-content">
-                        <div class="other-brokers-empty">No other-broker holdings added yet.</div>
-                    </div>
-                    <div class="other-brokers-actions">
-                        <button class="upload-btn upload-btn-green" onclick="openAddManualHoldingModal()">Add holding</button>
-                        <button class="upload-btn" onclick="refreshLivePrices(true)">Refresh prices</button>
-                    </div>
-                </div>
-            </div>
-        </div>
-
         <!-- Portfolio Valuation Chart -->
         <div id="portfolio-chart-section" class="portfolio-summary panel" style="display: none;">
             <div class="panel-header">
@@ -2139,6 +2123,27 @@
                             </thead>
                             <tbody id="cash-movements-body"></tbody>
                         </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Other Brokers -->
+        <div id="other-brokers-section" class="portfolio-summary panel collapsed" style="display: none;">
+            <div class="panel-header">
+                <h3 class="panel-title">Other Brokers</h3>
+                <button class="panel-toggle" type="button" aria-label="Toggle Other Brokers" aria-expanded="false" onclick="togglePanel(this)">
+                    <span class="panel-caret">▾</span>
+                </button>
+            </div>
+            <div class="panel-content">
+                <div class="panel-content-inner">
+                    <div id="other-brokers-content">
+                        <div class="other-brokers-empty">No other-broker holdings added yet.</div>
+                    </div>
+                    <div class="other-brokers-actions">
+                        <button class="upload-btn upload-btn-green" onclick="openAddManualHoldingModal()">Add holding</button>
+                        <button class="upload-btn" onclick="refreshLivePrices(true)">Refresh prices</button>
                     </div>
                 </div>
             </div>
@@ -4381,12 +4386,13 @@
                 }
 
                 let ytdHtml = '';
-                if (h.ytd_change_eur != null) {
+                if (h.ytd_change_eur != null && h.shares) {
                     const cls = changeCls(h.ytd_change_eur);
+                    const perShare = h.ytd_change_eur / h.shares;
                     const pctStr = h.ytd_change_pct != null
                         ? ` (${sign(h.ytd_change_pct)}${Math.abs(h.ytd_change_pct).toLocaleString('nl-NL', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}%)`
                         : '';
-                    ytdHtml = `<div class="tt-holding-ytd ${cls}">YTD: ${sign(h.ytd_change_eur)}${fmtEur(h.ytd_change_eur)}${pctStr}</div>`;
+                    ytdHtml = `<div class="tt-holding-ytd ${cls}">YTD: ${sign(perShare)}${fmtEur(perShare)}/share${pctStr}</div>`;
                 }
 
                 return `
