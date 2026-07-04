@@ -14,6 +14,37 @@
     <meta name="apple-mobile-web-app-status-bar-style" content="default">
     <script src="https://cdn.plot.ly/plotly-2.27.0.min.js"></script>
     <style>
+        :root {
+            --bg-page: #f5f7fa;
+            --card-bg: #ffffff;
+            --bg-secondary: #f7fafc;
+            --bg-tertiary: #edf2f7;
+            --border: #e2e8f0;
+            --border-muted: #cbd5e0;
+            --border-light: #f0f0f0;
+            --text: #2d3748;
+            --text-secondary: #4a5568;
+            --text-muted: #718096;
+            --text-muted-light: #a0aec0;
+            --text-inverse: #ffffff;
+            --accent: #1098c9;
+        }
+
+        [data-theme="dark"] {
+            --bg-page: #0f172a;
+            --card-bg: #1e293b;
+            --bg-secondary: #334155;
+            --bg-tertiary: #475569;
+            --border: #475569;
+            --border-muted: #64748b;
+            --border-light: #334155;
+            --text: #f1f5f9;
+            --text-secondary: #cbd5e1;
+            --text-muted: #94a3b8;
+            --text-muted-light: #64748b;
+            --text-inverse: #0f172a;
+        }
+
         * {
             margin: 0;
             padding: 0;
@@ -31,6 +62,10 @@
             min-height: 100vh;
             padding: 20px;
             font-size: 14px;
+        }
+
+        [data-theme="dark"] body {
+            background: linear-gradient(135deg, #1e1b4b 0%, #312e81 100%);
         }
 
         .container {
@@ -102,7 +137,7 @@
             right: 20px;
             padding: 15px 20px;
             border-radius: 8px;
-            background: white;
+            background: var(--card-bg);
             box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
             z-index: 1000;
             display: none;
@@ -123,7 +158,7 @@
             width: 400px;
             padding: 20px;
             border-radius: 8px;
-            background: white;
+            background: var(--card-bg);
             box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
             z-index: 1000;
             display: none;
@@ -132,14 +167,14 @@
         .upload-progress-message {
             margin-bottom: 12px;
             font-size: 14px;
-            color: #333;
+            color: var(--text);
             font-weight: 500;
         }
 
         .progress-bar-background {
             width: 100%;
             height: 8px;
-            background: #e2e8f0;
+            background: var(--border);
             border-radius: 4px;
             overflow: hidden;
             position: relative;
@@ -187,7 +222,7 @@
         }
 
         .stock-card {
-            background: white;
+            background: var(--card-bg);
             padding: 12px 15px;
             border-radius: 8px;
             box-shadow: 0 3px 10px rgba(0, 0, 0, 0.08);
@@ -211,13 +246,13 @@
         .stock-name {
             font-size: 0.85em;
             font-weight: 600;
-            color: #2d3748;
+            color: var(--text);
             margin-bottom: 3px;
             line-height: 1.2;
         }
 
         .stock-name a {
-            color: #2d3748;
+            color: var(--text);
             text-decoration: none;
             transition: color 0.2s;
         }
@@ -241,7 +276,7 @@
         }
 
         .stock-ticker a {
-            color: #718096;
+            color: var(--text-muted);
             text-decoration: none;
             transition: color 0.2s;
         }
@@ -252,7 +287,7 @@
         }
 
         .stock-exchange {
-            color: #a0aec0;
+            color: var(--text-muted-light);
             font-size: 0.6em;
             margin-bottom: 4px;
         }
@@ -267,7 +302,7 @@
         .stock-price {
             font-size: 0.8em;
             margin-bottom: 3px;
-            color: #2d3748;
+            color: var(--text);
         }
 
         .stock-price .positive {
@@ -291,12 +326,12 @@
         }
 
         .stock-meta {
-            color: #718096;
+            color: var(--text-muted);
             font-size: 0.65em;
         }
 
         .chart-container {
-            background: white;
+            background: var(--card-bg);
             padding: 20px;
             border-radius: 15px;
             box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
@@ -305,7 +340,7 @@
 
         .chart-title {
             font-size: 1.3em;
-            color: #2d3748;
+            color: var(--text);
             margin-bottom: 15px;
             font-weight: 600;
         }
@@ -341,13 +376,13 @@
             flex-wrap: wrap;
             gap: 6px;
             justify-content: center;
-            margin: 8px 0 12px;
+            margin: 0;
         }
 
         .chart-range-btn {
-            background: #f7fafc;
-            border: 1px solid #e2e8f0;
-            color: #4a5568;
+            background: var(--bg-secondary);
+            border: 1px solid var(--border);
+            color: var(--text-secondary);
             padding: 5px 12px;
             border-radius: 6px;
             font-size: 0.82em;
@@ -357,8 +392,8 @@
         }
 
         .chart-range-btn:hover {
-            background: #edf2f7;
-            border-color: #cbd5e0;
+            background: var(--bg-tertiary);
+            border-color: var(--border-muted);
         }
 
         .chart-range-btn.active {
@@ -367,16 +402,25 @@
             color: #ffffff;
         }
 
+        .chart-controls {
+            display: flex;
+            flex-wrap: wrap;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            margin: 8px 0 12px;
+        }
+
         .chart-scale-toggle {
             display: flex;
             justify-content: center;
-            margin: -4px 0 12px;
+            margin: 0;
         }
 
         .chart-scale-btn {
-            background: #ffffff;
-            border: 1px solid #e2e8f0;
-            color: #4a5568;
+            background: var(--card-bg);
+            border: 1px solid var(--border);
+            color: var(--text-secondary);
             padding: 5px 12px;
             border-radius: 6px;
             font-size: 0.82em;
@@ -386,8 +430,8 @@
         }
 
         .chart-scale-btn:hover {
-            background: #f7fafc;
-            border-color: #cbd5e0;
+            background: var(--bg-secondary);
+            border-color: var(--border-muted);
         }
 
         .chart-scale-btn.active {
@@ -398,7 +442,7 @@
 
         .chart-subtitle {
             font-size: 1em;
-            color: #4a5568;
+            color: var(--text-secondary);
             margin: 15px 0 8px 0;
             font-weight: 600;
         }
@@ -406,9 +450,9 @@
         .tranche-list {
             margin-top: 15px;
             padding: 15px;
-            background: #f7fafc;
+            background: var(--bg-secondary);
             border-radius: 8px;
-            border: 1px solid #e2e8f0;
+            border: 1px solid var(--border);
         }
 
         .tranche-item {
@@ -416,7 +460,7 @@
             align-items: center;
             padding: 10px;
             margin-bottom: 8px;
-            background: white;
+            background: var(--card-bg);
             border-radius: 6px;
             border-left: 4px solid;
             box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
@@ -467,12 +511,12 @@
 
         .tranche-date {
             font-weight: 600;
-            color: #2d3748;
+            color: var(--text);
             font-size: 0.95em;
         }
 
         .tranche-quantity {
-            color: #718096;
+            color: var(--text-muted);
             font-size: 0.85em;
             margin-top: 2px;
         }
@@ -555,19 +599,19 @@
         }
 
         .stat-label {
-            color: #718096;
+            color: var(--text-muted);
             font-size: 0.75em;
             margin-bottom: 4px;
         }
 
         .stat-value {
-            color: #2d3748;
+            color: var(--text);
             font-size: 1.2em;
             font-weight: bold;
         }
 
         .portfolio-summary {
-            background: white;
+            background: var(--card-bg);
             padding: 10px 15px;
             border-radius: 12px;
             box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
@@ -582,7 +626,7 @@
         }
 
         .panel-title {
-            color: #2d3748;
+            color: var(--text);
             font-size: 1.3em;
             font-weight: 600;
             margin: 0;
@@ -603,8 +647,8 @@
 
         .panel-toggle {
             border: none;
-            background: #edf2f7;
-            color: #4a5568;
+            background: var(--bg-tertiary);
+            color: var(--text-secondary);
             width: 30px;
             height: 30px;
             border-radius: 999px;
@@ -618,8 +662,8 @@
         }
 
         .panel-toggle:hover {
-            background: #e2e8f0;
-            color: #2d3748;
+            background: var(--border);
+            color: var(--text);
         }
 
         .panel-caret {
@@ -674,7 +718,7 @@
         }
 
         .portfolio-summary h2 {
-            color: #2d3748;
+            color: var(--text);
             font-size: 1.6em;
             margin-bottom: 4px;
         }
@@ -778,7 +822,7 @@
         }
 
         .broker-toggle input:checked + .broker-toggle-slider {
-            background: #ffffff;
+            background: var(--card-bg);
         }
 
         .broker-toggle-slider::after {
@@ -810,7 +854,7 @@
         }
 
         .modal {
-            background: #ffffff;
+            background: var(--card-bg);
             border-radius: 14px;
             width: 100%;
             max-width: 460px;
@@ -820,7 +864,7 @@
 
         .modal-header {
             padding: 18px 20px;
-            border-bottom: 1px solid #edf2f7;
+            border-bottom: 1px solid var(--border);
             display: flex;
             justify-content: space-between;
             align-items: center;
@@ -829,14 +873,14 @@
         .modal-header h3 {
             margin: 0;
             font-size: 1.15em;
-            color: #2d3748;
+            color: var(--text);
         }
 
         .modal-close {
             background: none;
             border: none;
             font-size: 1.4em;
-            color: #a0aec0;
+            color: var(--text-muted-light);
             cursor: pointer;
             line-height: 1;
             padding: 0;
@@ -847,8 +891,8 @@
         }
 
         .modal-close:hover {
-            background: #f7fafc;
-            color: #2d3748;
+            background: var(--bg-secondary);
+            color: var(--text);
         }
 
         .modal-body {
@@ -867,17 +911,17 @@
         .form-group label {
             font-size: 0.85em;
             font-weight: 600;
-            color: #4a5568;
+            color: var(--text-secondary);
         }
 
         .form-group input,
         .form-group select {
             padding: 10px 12px;
-            border: 1px solid #e2e8f0;
+            border: 1px solid var(--border);
             border-radius: 8px;
             font-size: 0.95em;
-            color: #2d3748;
-            background: #ffffff;
+            color: var(--text);
+            background: var(--card-bg);
         }
 
         .form-group input:focus,
@@ -898,7 +942,7 @@
             align-items: center;
             gap: 6px;
             font-size: 0.85em;
-            color: #4a5568;
+            color: var(--text-secondary);
             cursor: pointer;
         }
 
@@ -929,17 +973,17 @@
         }
 
         .modal-actions .btn-secondary {
-            background: #edf2f7;
-            color: #4a5568;
+            background: var(--bg-tertiary);
+            color: var(--text-secondary);
         }
 
         .modal-actions .btn-secondary:hover {
-            background: #e2e8f0;
+            background: var(--border);
         }
 
         /* Other brokers panel */
         .other-brokers-empty {
-            color: #718096;
+            color: var(--text-muted);
             font-size: 0.9em;
             padding: 12px 0;
         }
@@ -955,13 +999,9 @@
             justify-content: space-between;
             align-items: center;
             padding: 12px 14px;
-            background: #f7fafc;
+            background: var(--bg-secondary);
             border-radius: 10px;
-            border: 1px solid #edf2f7;
-        }
-
-        .other-broker-row.manual-accent {
-            border-left: 4px solid #1098c9;
+            border: 1px solid var(--border);
         }
 
         .other-broker-left {
@@ -972,12 +1012,12 @@
 
         .other-broker-name {
             font-weight: 700;
-            color: #2d3748;
+            color: var(--text);
         }
 
         .other-broker-meta {
             font-size: 0.8em;
-            color: #718096;
+            color: var(--text-muted);
         }
 
         .other-broker-right {
@@ -986,7 +1026,7 @@
 
         .other-broker-value {
             font-weight: 700;
-            color: #2d3748;
+            color: var(--text);
         }
 
         .other-broker-change {
@@ -1037,7 +1077,7 @@
         .summary-table td {
             text-align: center;
             padding: 14px 16px;
-            background: #ffffff;
+            background: var(--card-bg);
             border: none;
             border-radius: 10px;
             vertical-align: top;
@@ -1078,8 +1118,8 @@
 
         .summary-breakdown .net-line {
             font-weight: 700;
-            color: #2d3748;
-            border-top: 1px solid #cbd5e0;
+            color: var(--text);
+            border-top: 1px solid var(--border-muted);
             padding-top: 2px;
             margin-top: 2px;
         }
@@ -1131,7 +1171,7 @@
         }
 
         .modal-content {
-            background: white;
+            background: var(--card-bg);
             border-radius: 12px;
             padding: 32px;
             max-width: 500px;
@@ -1155,12 +1195,12 @@
         .modal-title {
             font-size: 24px;
             font-weight: 700;
-            color: #2d3748;
+            color: var(--text);
             margin: 0;
         }
 
         .modal-message {
-            color: #4a5568;
+            color: var(--text-secondary);
             font-size: 16px;
             line-height: 1.6;
             margin-bottom: 24px;
@@ -1193,12 +1233,12 @@
         }
 
         .modal-btn-cancel {
-            background: #e2e8f0;
-            color: #4a5568;
+            background: var(--border);
+            color: var(--text-secondary);
         }
 
         .modal-btn-cancel:hover {
-            background: #cbd5e0;
+            background: var(--border-muted);
             transform: translateY(-1px);
             box-shadow: 0 6px 16px rgba(0, 0, 0, 0.15);
         }
@@ -1215,7 +1255,7 @@
         }
 
         .summary-label {
-            color: #718096;
+            color: var(--text-muted);
             font-size: 0.72em;
             margin-bottom: 6px;
             text-transform: uppercase;
@@ -1226,7 +1266,7 @@
         }
 
         .summary-value {
-            color: #2d3748;
+            color: var(--text);
             font-size: 1.35em;
             font-weight: bold;
         }
@@ -1249,7 +1289,7 @@
         }
 
         .graph-overview-label {
-            color: #718096;
+            color: var(--text-muted);
             font-size: 0.74em;
             text-transform: uppercase;
             letter-spacing: 0.08em;
@@ -1258,14 +1298,14 @@
         }
 
         .graph-overview-value {
-            color: #2d3748;
+            color: var(--text);
             font-size: 2em;
             font-weight: 700;
             line-height: 1.05;
         }
 
         .graph-overview-meta {
-            color: #718096;
+            color: var(--text-muted);
             font-size: 0.85em;
             margin-top: 4px;
         }
@@ -1297,13 +1337,13 @@
         .history-table th,
         .history-table td {
             padding: 10px 12px;
-            border-bottom: 1px solid #e2e8f0;
+            border-bottom: 1px solid var(--border);
             text-align: right;
             white-space: nowrap;
         }
 
         .history-table th {
-            color: #718096;
+            color: var(--text-muted);
             font-size: 0.76em;
             text-transform: uppercase;
             letter-spacing: 0.06em;
@@ -1321,7 +1361,7 @@
 
         .history-month {
             font-weight: 600;
-            color: #2d3748;
+            color: var(--text);
         }
 
         .history-year-row {
@@ -1451,7 +1491,7 @@
         }
 
         .settings-popup {
-            background: white;
+            background: var(--card-bg);
             border-radius: 14px;
             padding: 20px;
             width: 90%;
@@ -1463,7 +1503,7 @@
         .settings-popup h3 {
             margin: 0 0 16px 0;
             font-size: 1.1em;
-            color: #2d3748;
+            color: var(--text);
         }
 
         .settings-popup .settings-actions {
@@ -1478,6 +1518,40 @@
             padding: 12px 16px;
             font-size: 0.9em;
             text-align: center;
+        }
+
+        .settings-section {
+            margin-top: 16px;
+            padding-top: 16px;
+            border-top: 1px solid var(--border);
+        }
+
+        .settings-section h4 {
+            margin: 0 0 10px 0;
+            font-size: 0.9em;
+            color: var(--text);
+        }
+
+        .summary-card-toggles {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 8px;
+        }
+
+        .summary-card-toggle {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-size: 0.85em;
+            color: var(--text-secondary);
+            cursor: pointer;
+        }
+
+        .summary-card-toggle input {
+            width: 16px;
+            height: 16px;
+            accent-color: var(--accent);
+            cursor: pointer;
         }
 
         .settings-popup-close {
@@ -1504,7 +1578,7 @@
         @media (max-width: 600px) {
             body {
                 padding: 0;
-                background: white;
+                background: var(--card-bg);
             }
 
             .container {
@@ -1516,7 +1590,7 @@
                 border-radius: 0;
                 box-shadow: none;
                 margin-bottom: 0;
-                border-bottom: 1px solid #e2e8f0;
+                border-bottom: 1px solid var(--border);
             }
 
             #portfolio-header {
@@ -1602,7 +1676,7 @@
                 border-radius: 0;
                 box-shadow: none;
                 margin-bottom: 0;
-                border-bottom: 1px solid #e2e8f0;
+                border-bottom: 1px solid var(--border);
             }
 
             .chart-title {
@@ -1699,12 +1773,12 @@
             justify-content: center;
             min-width: 0;
             padding: 8px 12px;
-            border: 2px solid #e2e8f0;
+            border: 2px solid var(--border);
             border-radius: 999px;
             font-size: 0.82em;
             font-weight: 700;
-            color: #2d3748;
-            background: white;
+            color: var(--text);
+            background: var(--card-bg);
             white-space: nowrap;
             transition: border-color 0.2s, box-shadow 0.2s;
         }
@@ -1727,25 +1801,25 @@
         }
 
         .tt-nav-btn {
-            background: #edf2f7;
+            background: var(--bg-tertiary);
             border: none;
             padding: 8px 12px;
             border-radius: 8px;
             cursor: pointer;
             font-size: 0.9em;
             font-weight: 600;
-            color: #4a5568;
+            color: var(--text-secondary);
             transition: all 0.2s;
             white-space: nowrap;
         }
 
         .tt-nav-btn:hover {
-            background: #e2e8f0;
-            color: #2d3748;
+            background: var(--border);
+            color: var(--text);
         }
 
         .tt-header {
-            background: white;
+            background: var(--card-bg);
             padding: 0;
             margin-bottom: 16px;
             display: flex;
@@ -1759,7 +1833,7 @@
         .tt-header-value {
             font-size: 1.6em;
             font-weight: 700;
-            color: #2d3748;
+            color: var(--text);
         }
 
         .tt-header-change {
@@ -1780,7 +1854,7 @@
             align-items: center;
             justify-content: space-between;
             padding: 10px 0 6px 0;
-            border-bottom: 1px solid #e2e8f0;
+            border-bottom: 1px solid var(--border);
             margin-bottom: 0;
             cursor: pointer;
             user-select: none;
@@ -1789,14 +1863,14 @@
         .tt-section-title {
             font-size: 0.85em;
             font-weight: 700;
-            color: #718096;
+            color: var(--text-muted);
             text-transform: uppercase;
             letter-spacing: 0.5px;
         }
 
         .tt-section-toggle {
             font-size: 1em;
-            color: #718096;
+            color: var(--text-muted);
             transition: transform 0.2s;
         }
 
@@ -1822,7 +1896,7 @@
             align-items: center;
             padding: 6px 0;
             font-size: 0.75em;
-            color: #a0aec0;
+            color: var(--text-muted-light);
             font-weight: 600;
         }
 
@@ -1836,7 +1910,7 @@
             justify-content: space-between;
             align-items: flex-start;
             padding: 12px 0;
-            border-bottom: 1px solid #f0f0f0;
+            border-bottom: 1px solid var(--border-light);
             gap: 12px;
         }
 
@@ -1844,11 +1918,10 @@
             border-bottom: none;
         }
 
-        .tt-holding-row.manual-holding-row {
-            border-left: 3px solid #1098c9;
-            padding-left: 10px;
-            background: rgba(16, 152, 201, 0.04);
-            border-radius: 6px;
+        .tt-holding-ytd {
+            font-size: 0.75em;
+            font-weight: 600;
+            margin-top: 2px;
         }
 
         .tt-holding-left {
@@ -1858,14 +1931,14 @@
 
         .tt-holding-name {
             font-weight: 600;
-            color: #2d3748;
+            color: var(--text);
             font-size: 0.95em;
             line-height: 1.3;
         }
 
         .tt-holding-meta {
             font-size: 0.78em;
-            color: #a0aec0;
+            color: var(--text-muted-light);
             margin-top: 2px;
         }
 
@@ -1876,7 +1949,7 @@
 
         .tt-holding-value {
             font-weight: 700;
-            color: #2d3748;
+            color: var(--text);
             font-size: 0.95em;
         }
 
@@ -1892,14 +1965,14 @@
         .tt-empty {
             text-align: center;
             padding: 30px;
-            color: #a0aec0;
+            color: var(--text-muted-light);
             font-size: 0.95em;
         }
 
         .tt-loading {
             text-align: center;
             padding: 20px;
-            color: #718096;
+            color: var(--text-muted);
         }
     </style>
 </head>
@@ -1960,6 +2033,7 @@
                 <button id="live-refresh-btn" class="live-refresh-btn" onclick="refreshLivePrices(true)" aria-label="Refresh live prices" title="Refresh live prices">
                     <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M12 6v3l4-4-4-4v3c-4.42 0-8 3.58-8 8 0 1.57.46 3.03 1.24 4.26L6.7 14.8c-.45-.83-.7-1.79-.7-2.8 0-3.31 2.69-6 6-6zm6.76 1.74L17.3 9.2c.44.84.7 1.79.7 2.8 0 3.31-2.69 6-6 6v-3l-4 4 4 4v-3c4.42 0 8-3.58 8-8 0-1.57-.46-3.03-1.24-4.26z"/></svg>
                 </button>
+                <button id="theme-toggle" class="live-refresh-btn" onclick="toggleTheme()" aria-label="Toggle dark mode" title="Toggle dark mode" style="right:4px;">🌙</button>
             </div>
         </div>
 
@@ -2009,8 +2083,10 @@
             <div class="panel-content">
                 <div class="panel-content-inner">
                     <div id="tt-header-display"></div>
-                    <div id="chart-range-selector"></div>
-                    <div id="chart-scale-toggle"></div>
+                    <div id="chart-controls" class="chart-controls">
+                        <div id="chart-range-selector"></div>
+                        <div id="chart-scale-toggle"></div>
+                    </div>
                     <div id="portfolio-valuation-chart"></div>
                     <div class="tt-date-picker">
                         <button class="tt-nav-btn" type="button" onclick="ttShiftDate(-1)">◀ Prev</button>
@@ -2053,12 +2129,12 @@
                     <div style="max-height: 400px; overflow-y: auto;">
                         <table id="cash-movements-table" style="width: 100%; border-collapse: collapse; font-size: 0.85em;">
                             <thead>
-                                <tr style="background: #f7fafc; position: sticky; top: 0;">
-                                    <th style="padding: 8px 12px; text-align: left; border-bottom: 2px solid #e2e8f0; color: #4a5568;">Date</th>
-                                    <th style="padding: 8px 12px; text-align: left; border-bottom: 2px solid #e2e8f0; color: #4a5568;">Type</th>
-                                    <th style="padding: 8px 12px; text-align: left; border-bottom: 2px solid #e2e8f0; color: #4a5568;">Description</th>
-                                    <th style="padding: 8px 12px; text-align: right; border-bottom: 2px solid #e2e8f0; color: #4a5568;">Amount</th>
-                                    <th style="padding: 8px 12px; text-align: right; border-bottom: 2px solid #e2e8f0; color: #4a5568;">Balance</th>
+                                <tr style="background: var(--bg-secondary); position: sticky; top: 0;">
+                                    <th style="padding: 8px 12px; text-align: left; border-bottom: 2px solid var(--border); color: var(--text-secondary);">Date</th>
+                                    <th style="padding: 8px 12px; text-align: left; border-bottom: 2px solid var(--border); color: var(--text-secondary);">Type</th>
+                                    <th style="padding: 8px 12px; text-align: left; border-bottom: 2px solid var(--border); color: var(--text-secondary);">Description</th>
+                                    <th style="padding: 8px 12px; text-align: right; border-bottom: 2px solid var(--border); color: var(--text-secondary);">Amount</th>
+                                    <th style="padding: 8px 12px; text-align: right; border-bottom: 2px solid var(--border); color: var(--text-secondary);">Balance</th>
                                 </tr>
                             </thead>
                             <tbody id="cash-movements-body"></tbody>
@@ -2100,6 +2176,19 @@
         // Settings popup
         function openSettingsPopup() {
             const container = document.getElementById('settings-popup-container');
+            const cardLabels = {
+                current_value: 'Live Portfolio Value',
+                net_invested: 'Currently Invested',
+                deposits: 'Deposits',
+                current_profit_loss: 'Current Profit/Loss',
+                total_profit_loss: 'Total Profit/Loss',
+            };
+            const cardToggles = Object.entries(cardLabels).map(([key, label]) => `
+                <label class="summary-card-toggle">
+                    <input type="checkbox" ${summaryCardVisibility[key] ? 'checked' : ''} onchange="saveUserPreferences({ '${key}': this.checked })">
+                    <span>${label}</span>
+                </label>
+            `).join('');
             container.innerHTML = `
                 <div class="settings-popup-overlay" onclick="closeSettingsPopup(event)">
                     <div class="settings-popup" onclick="event.stopPropagation()">
@@ -2120,6 +2209,12 @@
                             <button class="purge-btn" onclick="closeSettingsPopup(); purgeDatabase();">
                                 Purge all data
                             </button>
+                        </div>
+                        <div class="settings-section">
+                            <h4>Summary cards</h4>
+                            <div class="summary-card-toggles">
+                                ${cardToggles}
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -2189,7 +2284,7 @@
 
                     // Show server status with uptime
                     if (statusIndicator) {
-                        statusIndicator.innerHTML = `<span style="color: #48bb78;">● Online</span> <span style="color: #a0aec0; font-size: 0.9em;">(uptime: ${data.uptime})</span>`;
+                        statusIndicator.innerHTML = `<span style="color: #48bb78;">● Online</span> <span style="color: var(--text-muted-light); font-size: 0.9em;">(uptime: ${data.uptime})</span>`;
                     }
                     offlineBanner.style.display = 'none';
                     setButtonsEnabled(true);
@@ -2329,6 +2424,13 @@
 
         let latestPortfolioSummary = null;
         let latestPortfolioHistoryData = null;
+        let summaryCardVisibility = {
+            current_value: true,
+            net_invested: true,
+            deposits: true,
+            current_profit_loss: true,
+            total_profit_loss: true,
+        };
 
         async function loadPortfolioSummary() {
             try {
@@ -2342,56 +2444,37 @@
                 const pct = (v) => v.toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2});
 
                 const otherBrokerHint = summary.other_brokers_count > 0
-                    ? `<div class="summary-calc-line" style="color:#718096;">Other brokers: ${summary.other_brokers_count} pos.</div>`
+                    ? `<div class="summary-calc-line" style="color:var(--text-muted);">Other brokers: ${summary.other_brokers_count} pos.</div>`
                     : '';
+
+                const sumCell = (key, label, content) => summaryCardVisibility[key]
+                    ? `<td>
+                        <div class="summary-label">${label}</div>
+                        <div class="summary-content">${content}</div>
+                    </td>`
+                    : '<td class="empty-cell"></td>';
 
                 const summaryHtml = `
                     <table class="summary-table">
                         <tr>
-                            <td>
-                                <div class="summary-label">Live Portfolio Value</div>
-                                <div class="summary-content">
-                                    <div class="summary-value">€${fmt(summary.current_value)}</div>
-                                </div>
-                            </td>
-                            <td>
-                                <div class="summary-label">Currently Invested</div>
-                                <div class="summary-content">
-                                    <div class="summary-value">€${fmt(summary.net_invested)}</div>
-                                    ${otherBrokerHint}
-                                </div>
-                            </td>
-                            <td>
-                                <div class="summary-label">Deposits</div>
-                                <div class="summary-content">
-                                    <div>
-                                        <div class="summary-value">€${fmt(summary.net_deposited)}</div>
-                                        <div class="summary-calc-line deposit">+ €${fmt(summary.total_deposited)}</div>
-                                        <div class="summary-calc-line withdrawal">− €${fmt(summary.total_withdrawals)}</div>
-                                    </div>
-                                </div>
-                            </td>
+                            ${sumCell('current_value', 'Live Portfolio Value', `<div class="summary-value">€${fmt(summary.current_value)}</div>`)}
+                            ${sumCell('net_invested', 'Currently Invested', `<div class="summary-value">€${fmt(summary.net_invested)}</div>${otherBrokerHint}`)}
+                            ${sumCell('deposits', 'Deposits', `<div>
+                                <div class="summary-value">€${fmt(summary.net_deposited)}</div>
+                                <div class="summary-calc-line deposit">+ €${fmt(summary.total_deposited)}</div>
+                                <div class="summary-calc-line withdrawal">− €${fmt(summary.total_withdrawals)}</div>
+                            </div>`)}
                         </tr>
                         <tr>
                             <td class="empty-cell"></td>
-                            <td>
-                                <div class="summary-label">Current Profit/Loss</div>
-                                <div class="summary-content">
-                                    <div class="summary-value ${cls(summary.gain_loss)}">
-                                        ${sign(summary.gain_loss)}€${fmt(summary.gain_loss)}
-                                        <div class="summary-subvalue">${sign(summary.gain_loss_percent)}${pct(summary.gain_loss_percent)}%</div>
-                                    </div>
-                                </div>
-                            </td>
-                            <td>
-                                <div class="summary-label">Total Profit/Loss</div>
-                                <div class="summary-content">
-                                    <div class="summary-value ${cls(summary.total_profit_loss)}">
-                                        ${sign(summary.total_profit_loss)}€${fmt(summary.total_profit_loss)}
-                                        <div class="summary-subvalue">${sign(summary.total_profit_loss_percent)}${pct(summary.total_profit_loss_percent)}%</div>
-                                    </div>
-                                </div>
-                            </td>
+                            ${sumCell('current_profit_loss', 'Current Profit/Loss', `<div class="summary-value ${cls(summary.gain_loss)}">
+                                ${sign(summary.gain_loss)}€${fmt(summary.gain_loss)}
+                                <div class="summary-subvalue">${sign(summary.gain_loss_percent)}${pct(summary.gain_loss_percent)}%</div>
+                            </div>`)}
+                            ${sumCell('total_profit_loss', 'Total Profit/Loss', `<div class="summary-value ${cls(summary.total_profit_loss)}">
+                                ${sign(summary.total_profit_loss)}€${fmt(summary.total_profit_loss)}
+                                <div class="summary-subvalue">${sign(summary.total_profit_loss_percent)}${pct(summary.total_profit_loss_percent)}%</div>
+                            </div>`)}
                         </tr>
                     </table>
                 `;
@@ -2404,6 +2487,33 @@
                 console.error('Failed to load portfolio summary:', error);
                 // Check if server went offline
                 await checkServerStatus();
+            }
+        }
+
+        async function loadUserPreferences() {
+            try {
+                const response = await fetch('/api/user-preferences');
+                const data = await response.json();
+                if (data?.summary_cards) {
+                    summaryCardVisibility = { ...summaryCardVisibility, ...data.summary_cards };
+                }
+            } catch (error) {
+                console.error('Failed to load user preferences:', error);
+            }
+        }
+
+        async function saveUserPreferences(updates) {
+            try {
+                summaryCardVisibility = { ...summaryCardVisibility, ...updates };
+                const response = await fetch('/api/user-preferences', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ summary_cards: summaryCardVisibility }),
+                });
+                await response.json();
+                await loadPortfolioSummary();
+            } catch (error) {
+                console.error('Failed to save user preferences:', error);
             }
         }
 
@@ -2432,6 +2542,69 @@
                 month: 'short',
                 year: 'numeric',
             });
+        }
+
+        // ─── Theme / dark mode ───────────────────────────────────────────────
+        function getPlotlyThemeColors() {
+            const isDark = document.documentElement.getAttribute('data-theme') === 'dark';
+            return {
+                paper_bgcolor: isDark ? '#1e293b' : '#ffffff',
+                plot_bgcolor: isDark ? '#1e293b' : '#f7fafc',
+                gridcolor: isDark ? '#475569' : '#e2e8f0',
+                font_color: isDark ? '#f1f5f9' : '#2d3748',
+                zerolinecolor: isDark ? '#64748b' : '#cbd5e0',
+            };
+        }
+
+        function applyThemeToAllCharts() {
+            const colors = getPlotlyThemeColors();
+            for (const id of ['portfolio-valuation-chart', 'chart', 'tranche-chart', 'position-percentage-chart', 'index-chart']) {
+                const el = document.getElementById(id);
+                if (el && el.data) {
+                    Plotly.relayout(id, {
+                        'paper_bgcolor': colors.paper_bgcolor,
+                        'plot_bgcolor': colors.plot_bgcolor,
+                        'font.color': colors.font_color,
+                        'xaxis.gridcolor': colors.gridcolor,
+                        'xaxis.zerolinecolor': colors.zerolinecolor,
+                        'yaxis.gridcolor': colors.gridcolor,
+                        'yaxis.zerolinecolor': colors.zerolinecolor,
+                    });
+                }
+            }
+        }
+
+        function initTheme() {
+            const saved = localStorage.getItem('degiro-theme');
+            let theme = 'light';
+            if (saved === 'dark' || saved === 'light') {
+                theme = saved;
+            } else if (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) {
+                theme = 'dark';
+            }
+            document.documentElement.setAttribute('data-theme', theme);
+            updateThemeToggleIcon();
+        }
+
+        function setTheme(theme) {
+            if (theme !== 'light' && theme !== 'dark') return;
+            localStorage.setItem('degiro-theme', theme);
+            document.documentElement.setAttribute('data-theme', theme);
+            updateThemeToggleIcon();
+            applyThemeToAllCharts();
+        }
+
+        function toggleTheme() {
+            const current = document.documentElement.getAttribute('data-theme') === 'dark' ? 'dark' : 'light';
+            setTheme(current === 'dark' ? 'light' : 'dark');
+        }
+
+        function updateThemeToggleIcon() {
+            const btn = document.getElementById('theme-toggle');
+            if (!btn) return;
+            const isDark = document.documentElement.getAttribute('data-theme') === 'dark';
+            btn.innerHTML = isDark ? '☀️' : '🌙';
+            btn.setAttribute('title', isDark ? 'Switch to light mode' : 'Switch to dark mode');
         }
 
         function renderChartRangeButtons() {
@@ -2803,17 +2976,19 @@
                     hovertemplate: '<b>Net Invested</b><br>€%{y:,.2f}<br>%{x}<extra></extra>'
                 };
 
+                const theme = getPlotlyThemeColors();
+
                 // Get the most recent date
                 const lastDate = data.dates[data.dates.length - 1];
 
                 const layout = {
                     xaxis: {
                         type: 'date',
-                        gridcolor: '#e2e8f0'
+                        gridcolor: theme.gridcolor
                     },
                     yaxis: {
                         title: 'Value (EUR)',
-                        gridcolor: '#e2e8f0',
+                        gridcolor: theme.gridcolor,
                         tickformat: ',.0f',
                         tickprefix: '€',
                         rangemode: 'tozero'
@@ -2824,7 +2999,8 @@
                         x: 0,
                         y: 1.15,
                         orientation: 'h',
-                        bgcolor: 'rgba(255, 255, 255, 0.9)'
+                        bgcolor: theme.paper_bgcolor,
+                        font: { color: theme.font_color }
                     },
                     annotations: [{
                         x: 1,
@@ -2846,13 +3022,14 @@
                             family: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif'
                         }
                     }],
-                    plot_bgcolor: '#f7fafc',
-                    paper_bgcolor: 'white',
+                    plot_bgcolor: theme.plot_bgcolor,
+                    paper_bgcolor: theme.paper_bgcolor,
                     margin: window.innerWidth <= 600
                         ? { t: 10, b: 35, l: 55, r: 10 }
                         : { t: 10, b: 40 },
                     font: {
-                        family: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif'
+                        family: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif',
+                        color: theme.font_color
                     }
                 };
 
@@ -3053,6 +3230,7 @@
             renderHoldings(); // Update active state
 
             try {
+                const theme = getPlotlyThemeColors();
                 const response = await fetch(`/api/stock/${stockId}/chart-data`);
                 const data = await response.json();
 
@@ -3066,12 +3244,12 @@
                                        dataProvider === 'fmp' ? 'FMP' : dataProvider;
 
                 const titleElement = document.getElementById('chart-title');
-                titleElement.innerHTML = `${data.stock.name} (${data.stock.symbol}) <span style="font-size: 0.7em; color: #718096; font-weight: 400;">(last updated: ${latestPriceDate} from ${providerDisplay})</span>`;
+                titleElement.innerHTML = `${data.stock.name} (${data.stock.symbol}) <span style="font-size: 0.7em; color: var(--text-muted); font-weight: 400;">(last updated: ${latestPriceDate} from ${providerDisplay})</span>`;
 
                 // Check if we have price data
                 if (!data.prices || data.prices.length === 0) {
                     document.getElementById('chart').innerHTML =
-                        '<div style="padding: 40px; text-align: center; color: #718096;">' +
+                        '<div style="padding: 40px; text-align: center; color: var(--text-muted);">' +
                         '<p style="font-size: 18px; margin-bottom: 10px;">📊 No price data available</p>' +
                         '<p style="font-size: 14px;">Price history for this stock has not been fetched yet.</p>' +
                         '</div>';
@@ -3181,7 +3359,7 @@
             // Filter out price records with null values
             const validPrices = data.prices.filter(p => p.close !== null);
             if (validPrices.length === 0) {
-                document.getElementById('chart-area').innerHTML = '<p style="text-align: center; color: #718096; padding: 40px;">No price data available for this stock yet. Click "Update Market Data" to fetch prices.</p>';
+                document.getElementById('chart-area').innerHTML = '<p style="text-align: center; color: var(--text-muted); padding: 40px;">No price data available for this stock yet. Click "Update Market Data" to fetch prices.</p>';
                 return;
             }
 
@@ -3291,12 +3469,14 @@
                 xaxis: {
                     title: '',
                     rangeslider: { visible: false },
-                    type: 'date'
+                    type: 'date',
+                    gridcolor: theme.gridcolor
                 },
                 yaxis: {
                     title: `Price (${currency})`,
                     fixedrange: false,
-                    autorange: true
+                    autorange: true,
+                    gridcolor: theme.gridcolor
                 },
                 hovermode: 'x unified',
                 showlegend: true,
@@ -3304,13 +3484,15 @@
                     x: 0,
                     y: 1.1,
                     orientation: 'h',
-                    bgcolor: 'rgba(255, 255, 255, 0.9)'
+                    bgcolor: theme.paper_bgcolor,
+                    font: { color: theme.font_color }
                 },
-                plot_bgcolor: '#f7fafc',
-                paper_bgcolor: 'white',
+                plot_bgcolor: theme.plot_bgcolor,
+                paper_bgcolor: theme.paper_bgcolor,
                 margin: { b: 40, t: 10 },
                 font: {
-                    family: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Oxygen, Ubuntu, Cantarell, sans-serif'
+                    family: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Oxygen, Ubuntu, Cantarell, sans-serif',
+                    color: theme.font_color
                 }
             };
 
@@ -3397,11 +3579,13 @@
                 title: '',
                 xaxis: {
                     title: 'Date',
-                    type: 'date'
+                    type: 'date',
+                    gridcolor: theme.gridcolor
                 },
                 yaxis: {
                     title: `Investment Value (${currency})`,
-                    fixedrange: false
+                    fixedrange: false,
+                    gridcolor: theme.gridcolor
                 },
                 hovermode: 'x unified',
                 showlegend: true,
@@ -3409,10 +3593,11 @@
                     x: 0,
                     y: 1.15,
                     orientation: 'h',
-                    bgcolor: 'rgba(255, 255, 255, 0.9)'
+                    bgcolor: theme.paper_bgcolor,
+                    font: { color: theme.font_color }
                 },
-                plot_bgcolor: '#f7fafc',
-                paper_bgcolor: 'white',
+                plot_bgcolor: theme.plot_bgcolor,
+                paper_bgcolor: theme.paper_bgcolor,
                 margin: { t: 10 },
                 font: {
                     family: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Oxygen, Ubuntu, Cantarell, sans-serif'
@@ -3559,23 +3744,24 @@
                     xaxis: {
                         title: 'Date',
                         type: 'date',
-                        gridcolor: '#e2e8f0'
+                        gridcolor: theme.gridcolor
                     },
                     yaxis: {
                         title: 'Position Value (%)',
-                        gridcolor: '#e2e8f0',
+                        gridcolor: theme.gridcolor,
                         range: yRange,
                         fixedrange: false,
                         zeroline: true,
-                        zerolinecolor: '#cbd5e0'
+                        zerolinecolor: theme.zerolinecolor
                     },
                     hovermode: 'x unified',
                     showlegend: false,
-                    plot_bgcolor: '#f7fafc',
-                    paper_bgcolor: 'white',
+                    plot_bgcolor: theme.plot_bgcolor,
+                    paper_bgcolor: theme.paper_bgcolor,
                     margin: { t: 10 },
                     font: {
-                        family: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Oxygen, Ubuntu, Cantarell, sans-serif'
+                        family: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Oxygen, Ubuntu, Cantarell, sans-serif',
+                        color: theme.font_color
                     },
                     shapes: [{
                         type: 'line',
@@ -3658,13 +3844,13 @@
                     height: 350,
                     xaxis: {
                         title: 'Date',
-                        gridcolor: '#e2e8f0'
+                        gridcolor: theme.gridcolor
                     },
                     yaxis: {
                         title: 'Percentage Change (%)',
-                        gridcolor: '#e2e8f0',
+                        gridcolor: theme.gridcolor,
                         zeroline: true,
-                        zerolinecolor: '#cbd5e0',
+                        zerolinecolor: theme.zerolinecolor,
                         zerolinewidth: 2
                     },
                     hovermode: 'x unified',
@@ -3673,13 +3859,15 @@
                         x: 0,
                         y: 1.15,
                         orientation: 'h',
-                        bgcolor: 'rgba(255, 255, 255, 0.9)'
+                        bgcolor: theme.paper_bgcolor,
+                        font: { color: theme.font_color }
                     },
-                    plot_bgcolor: '#f7fafc',
-                    paper_bgcolor: 'white',
+                    plot_bgcolor: theme.plot_bgcolor,
+                    paper_bgcolor: theme.paper_bgcolor,
                     margin: { t: 10 },
                     font: {
-                        family: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Oxygen, Ubuntu, Cantarell, sans-serif'
+                        family: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Oxygen, Ubuntu, Cantarell, sans-serif',
+                        color: theme.font_color
                     }
                 };
 
@@ -4192,8 +4380,17 @@
                     changeHtml = `<div class="tt-holding-change ${cls}">${sign(h.daily_change_eur)}${fmtEur(h.daily_change_eur)}${pctStr}</div>`;
                 }
 
+                let ytdHtml = '';
+                if (h.ytd_change_eur != null) {
+                    const cls = changeCls(h.ytd_change_eur);
+                    const pctStr = h.ytd_change_pct != null
+                        ? ` (${sign(h.ytd_change_pct)}${Math.abs(h.ytd_change_pct).toLocaleString('nl-NL', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}%)`
+                        : '';
+                    ytdHtml = `<div class="tt-holding-ytd ${cls}">YTD: ${sign(h.ytd_change_eur)}${fmtEur(h.ytd_change_eur)}${pctStr}</div>`;
+                }
+
                 return `
-                    <div class="tt-holding-row ${h.is_manual ? 'manual-holding-row' : ''}">
+                    <div class="tt-holding-row">
                         <div class="tt-holding-left">
                             <div class="tt-holding-name">${h.name}</div>
                             <div class="tt-holding-meta">${metaLine}</div>
@@ -4201,6 +4398,7 @@
                         <div class="tt-holding-right">
                             <div class="tt-holding-value">${valueStr}</div>
                             ${changeHtml}
+                            ${ytdHtml}
                         </div>
                     </div>
                 `;
@@ -4296,14 +4494,14 @@
                         ? `€${m.balance.toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2})}`
                         : '—';
 
-                    return `<tr style="border-bottom: 1px solid #e2e8f0;">
+                    return `<tr style="border-bottom: 1px solid var(--border);">
                         <td style="padding: 8px 12px;">${date}</td>
                         <td style="padding: 8px 12px; color: ${color}; font-weight: 600;">${typeLabel}</td>
-                        <td style="padding: 8px 12px; color: #718096;">${m.description}</td>
+                        <td style="padding: 8px 12px; color: var(--text-muted);">${m.description}</td>
                         <td style="padding: 8px 12px; text-align: right; font-weight: 600; color: ${color};">
                             ${sign}€${Math.abs(m.amount).toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2})}
                         </td>
-                        <td style="padding: 8px 12px; text-align: right; color: #4a5568;">${balanceStr}</td>
+                        <td style="padding: 8px 12px; text-align: right; color: var(--text-secondary);">${balanceStr}</td>
                     </tr>`;
                 }).join('');
 
@@ -4600,7 +4798,7 @@
                                 ? `<div class="other-broker-change ${cls(h.price_change_pct)}">1d: ${sign(h.price_change_pct)}${Math.abs(h.price_change_pct).toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2})}%</div>`
                                 : '';
                             return `
-                                <div class="other-broker-row manual-accent">
+                                <div class="other-broker-row">
                                     <div class="other-broker-left">
                                         <div class="other-broker-name">${h.name}</div>
                                         <div class="other-broker-meta">${h.symbol} · ${h.shares} shares · Cost ${fmtEur(h.cost_basis_eur)} · ${h.broker || 'Other'}</div>
@@ -4640,6 +4838,9 @@
         }
 
         async function initialize() {
+            // Theme first so the first paint already has the right palette
+            initTheme();
+
             // Start continuous server monitoring (every 5 seconds)
             startServerMonitoring();
 
@@ -4653,6 +4854,7 @@
             // Load server config and set toggle state before fetching data
             await fetchServerConfig();
             initIncludeOtherBrokersToggle();
+            await loadUserPreferences();
 
             document.getElementById('portfolio-header').style.display = 'block';
 

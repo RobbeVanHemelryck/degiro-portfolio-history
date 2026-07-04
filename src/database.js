@@ -101,6 +101,13 @@ function initDb() {
     CREATE INDEX IF NOT EXISTS idx_cash_movements_date ON cash_movements(date);
     CREATE INDEX IF NOT EXISTS idx_cash_movements_type ON cash_movements(type);
 
+    -- User preferences
+    CREATE TABLE IF NOT EXISTS user_preferences (
+      key TEXT PRIMARY KEY,
+      value TEXT NOT NULL,
+      updated_at TEXT DEFAULT CURRENT_TIMESTAMP
+    );
+
     -- Manual / other-broker holdings
     CREATE TABLE IF NOT EXISTS manual_holdings (
       id INTEGER PRIMARY KEY AUTOINCREMENT,

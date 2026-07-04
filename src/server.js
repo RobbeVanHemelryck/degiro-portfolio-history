@@ -147,11 +147,31 @@ function getManualHoldingPrevDayPrice(db, manualHoldingId, priceDay) {
   ).get(manualHoldingId, priceDay);
 }
 
+function getStockPriceOnOrAfterDate(db, stockId, date) {
+  return db.prepare(
+    `SELECT * FROM stock_prices
+     WHERE stock_id = ? AND substr(date, 1, 10) >= ?
+     ORDER BY substr(date, 1, 10) ASC, date ASC
+     LIMIT 1`
+  ).get(stockId, date);
+}
+
+function getManualHoldingPriceOnOrAfterDate(db, manualHoldingId, date) {
+  return db.prepare(
+    `SELECT * FROM manual_holding_prices
+     WHERE manual_holding_id = ? AND substr(date, 1, 10) >= ?
+     ORDER BY substr(date, 1, 10) ASC, date ASC
+     LIMIT 1`
+  ).get(manualHoldingId, date);
+}
+
 function enrichManualHoldings(db) {
   const holdings = getManualHoldings(db);
   if (!holdings.length) return [];
 
-  const { globalRates } = loadExchangeRates(db);
+  const { globalRates, historicalRates } = loadExchangeRates(db);
+  const currentYear = new Date().getFullYear();
+  const ytdStartDate = `${currentYear}-01-01`;
 
   return holdings.map((h) => {
     const latest = getManualHoldingLatestPrice(db, h.id);
@@ -173,6 +193,22 @@ function enrichManualHoldings(db) {
       dailyChangePct = ((price - prevPrice) / prevPrice) * 100;
     }
 
+    let ytdChangeEur = null;
+    let ytdChangePct = null;
+    if (price != null && latestDay) {
+      const ytdStartRow = getManualHoldingPriceOnOrAfterDate(db, h.id, ytdStartDate);
+      if (ytdStartRow?.close != null && ytdStartRow.close > 0) {
+        const ytdStartDay = (ytdStartRow.date || '').split('T')[0];
+        const ytdCurrency = ytdStartRow.currency || currency;
+        const ytdRate = getRateOnDate(ytdCurrency, ytdStartDay, globalRates, historicalRates);
+        const latestRate = getRateOnDate(ytdCurrency, latestDay, globalRates, historicalRates);
+        const latestEur = price * latestRate;
+        const ytdStartEur = ytdStartRow.close * ytdRate;
+        ytdChangeEur = (latestEur - ytdStartEur) * h.quantity;
+        ytdChangePct = ((latestEur - ytdStartEur) / ytdStartEur) * 100;
+      }
+    }
+
     return {
       id: h.id,
       is_manual: true,
@@ -190,6 +226,8 @@ function enrichManualHoldings(db) {
       total_value_eur: totalValueEur != null ? Math.round(totalValueEur * 100) / 100 : null,
       gain_loss_eur: gainLoss != null ? Math.round(gainLoss * 100) / 100 : null,
       gain_loss_percent: gainLossPct != null ? Math.round(gainLossPct * 100) / 100 : null,
+      ytd_change_eur: ytdChangeEur != null ? Math.round(ytdChangeEur * 100) / 100 : null,
+      ytd_change_pct: ytdChangePct != null ? Math.round(ytdChangePct * 100) / 100 : null,
       purchase_date: h.purchase_date,
       broker: h.broker,
     };
@@ -430,6 +468,55 @@ app.get('/api/config', (_req, res) => {
   });
 });
 
+// ─── User preferences ────────────────────────────────────────────────
+const SUMMARY_CARD_KEYS = ['current_value', 'net_invested', 'deposits', 'current_profit_loss', 'total_profit_loss'];
+
+function getSummaryCardVisibility(db) {
+  const rows = db.prepare('SELECT key, value FROM user_preferences WHERE key LIKE ?').all('summary_card_%');
+  const prefs = {};
+  for (const r of rows) prefs[r.key] = r.value;
+  const result = {};
+  for (const key of SUMMARY_CARD_KEYS) {
+    result[key] = prefs[`summary_card_${key}`] !== 'false';
+  }
+  return result;
+}
+
+app.get('/api/user-preferences', (_req, res) => {
+  try {
+    const db = getDb();
+    res.json({
+      success: true,
+      summary_cards: getSummaryCardVisibility(db),
+    });
+  } catch (err) {
+    console.error('Get user preferences error:', err);
+    res.status(500).json({ success: false, message: `Error loading preferences: ${err.message}` });
+  }
+});
+
+app.post('/api/user-preferences', (req, res) => {
+  try {
+    const db = getDb();
+    const { summary_cards } = req.body || {};
+    if (summary_cards && typeof summary_cards === 'object') {
+      const upsert = db.prepare(`
+        INSERT INTO user_preferences (key, value) VALUES (?, ?)
+        ON CONFLICT(key) DO UPDATE SET value = excluded.value, updated_at = CURRENT_TIMESTAMP
+      `);
+      for (const key of SUMMARY_CARD_KEYS) {
+        if (summary_cards[key] !== undefined) {
+          upsert.run(`summary_card_${key}`, String(!!summary_cards[key]));
+        }
+      }
+    }
+    res.json({ success: true, summary_cards: getSummaryCardVisibility(db) });
+  } catch (err) {
+    console.error('Save user preferences error:', err);
+    res.status(500).json({ success: false, message: `Error saving preferences: ${err.message}` });
+  }
+});
+
 // ─── Manual / other-broker holdings ──────────────────────────────────
 app.get('/api/manual-holdings', (_req, res) => {
   const db = getDb();
@@ -532,12 +619,45 @@ app.get('/api/holdings', (req, res) => {
     const prevByStock = {};
     for (const p of prevPrices) prevByStock[p.stock_id] = p;
 
+    const { globalRates, historicalRates } = loadExchangeRates(db);
+    const currentYear = new Date().getFullYear();
+    const ytdStartDate = `${currentYear}-01-01`;
+    const ytdStartPrices = db.prepare(`
+      SELECT sp.* FROM stock_prices sp
+      INNER JOIN (
+        SELECT stock_id, MIN(date) as min_date FROM stock_prices
+        WHERE stock_id IN (${idPlaceholders}) AND substr(date, 1, 10) >= ?
+        GROUP BY stock_id
+      ) sub ON sp.stock_id = sub.stock_id AND sp.date = sub.min_date
+    `).all(...stockIds, ytdStartDate);
+
+    const ytdStartByStock = {};
+    for (const p of ytdStartPrices) ytdStartByStock[p.stock_id] = p;
+
     for (const h of holdings) {
       const latest = latestByStock[h.id];
       const prev = prevByStock[h.id];
+      const latestDay = latest ? (latest.date || '').split('T')[0] : null;
       let priceChangePct = null;
       if (latest?.close && prev?.close && prev.close > 0) {
         priceChangePct = ((latest.close - prev.close) / prev.close) * 100;
+      }
+
+      const currency = latest?.currency || h.currency;
+      let ytdChangeEur = null;
+      let ytdChangePct = null;
+      if (latest?.close != null && latestDay) {
+        const ytdStartRow = ytdStartByStock[h.id];
+        if (ytdStartRow?.close != null && ytdStartRow.close > 0) {
+          const ytdStartDay = (ytdStartRow.date || '').split('T')[0];
+          const ytdCurrency = ytdStartRow.currency || currency;
+          const ytdRate = getRateOnDate(ytdCurrency, ytdStartDay, globalRates, historicalRates);
+          const latestRate = getRateOnDate(ytdCurrency, latestDay, globalRates, historicalRates);
+          const latestEur = latest.close * latestRate;
+          const ytdStartEur = ytdStartRow.close * ytdRate;
+          ytdChangeEur = (latestEur - ytdStartEur) * h.total_qty;
+          ytdChangePct = ((latestEur - ytdStartEur) / ytdStartEur) * 100;
+        }
       }
 
       result.push({
@@ -546,13 +666,15 @@ app.get('/api/holdings', (req, res) => {
         symbol: h.symbol,
         name: h.name,
         isin: h.isin,
-        currency: latest?.currency || h.currency,
+        currency,
         degiro_currency: h.currency,
         shares: h.total_qty,
         transactions_count: h.trans_count,
         latest_price: latest?.close ?? null,
         price_change_pct: priceChangePct,
         price_date: latest?.date ?? null,
+        ytd_change_eur: ytdChangeEur != null ? Math.round(ytdChangeEur * 100) / 100 : null,
+        ytd_change_pct: ytdChangePct != null ? Math.round(ytdChangePct * 100) / 100 : null,
         exchange: h.exchange,
         yahoo_ticker: h.yahoo_ticker,
       });
@@ -1432,6 +1554,8 @@ app.get('/api/time-travel', (req, res) => {
 
   const { globalRates, historicalRates } = loadExchangeRates(db);
   const getRate = (currency, targetDate) => getRateOnDate(currency, targetDate, globalRates, historicalRates);
+  const queryYear = date.slice(0, 4);
+  const ytdStartDate = `${queryYear}-01-01`;
 
   const holdingsList = [];
   let totalValueEur = 0;
@@ -1478,6 +1602,27 @@ app.get('/api/time-travel', (req, res) => {
       dailyChangePct = ((price - prevPrice) / prevPrice) * 100;
     }
 
+    let ytdChange = null;
+    let ytdChangePct = null;
+    if (price != null) {
+      const ytdStartRow = db.prepare(
+        `SELECT * FROM stock_prices
+         WHERE stock_id = ? AND substr(date, 1, 10) >= ? AND substr(date, 1, 10) <= ?
+         ORDER BY substr(date, 1, 10) ASC, date ASC
+         LIMIT 1`
+      ).get(stockId, ytdStartDate, date);
+      if (ytdStartRow?.close != null && ytdStartRow.close > 0) {
+        const ytdStartDay = (ytdStartRow.date || '').split('T')[0];
+        const ytdCurrency = ytdStartRow.currency || currency;
+        const ytdStartRate = getRate(ytdCurrency, ytdStartDay);
+        const priceRate = getRate(ytdCurrency, date);
+        const priceEur = price * priceRate;
+        const ytdStartEur = ytdStartRow.close * ytdStartRate;
+        ytdChange = (priceEur - ytdStartEur) * qty;
+        ytdChangePct = ((priceEur - ytdStartEur) / ytdStartEur) * 100;
+      }
+    }
+
     if (totalValueInEur != null) totalValueEur += totalValueInEur;
     if (prevTotalValueInEur != null) totalPrevValueEur += prevTotalValueInEur;
 
@@ -1496,6 +1641,8 @@ app.get('/api/time-travel', (req, res) => {
       total_value_eur: totalValueInEur != null ? Math.round(totalValueInEur * 100) / 100 : null,
       daily_change_eur: dailyChange != null ? Math.round(dailyChange * 100) / 100 : null,
       daily_change_pct: dailyChangePct != null ? Math.round(dailyChangePct * 100) / 100 : null,
+      ytd_change_eur: ytdChange != null ? Math.round(ytdChange * 100) / 100 : null,
+      ytd_change_pct: ytdChangePct != null ? Math.round(ytdChangePct * 100) / 100 : null,
     });
   }
 
@@ -1525,6 +1672,27 @@ app.get('/api/time-travel', (req, res) => {
       dailyChangePct = ((price - prevPrice) / prevPrice) * 100;
     }
 
+    let ytdChange = null;
+    let ytdChangePct = null;
+    if (price != null) {
+      const ytdStartRow = db.prepare(
+        `SELECT * FROM manual_holding_prices
+         WHERE manual_holding_id = ? AND substr(date, 1, 10) >= ? AND substr(date, 1, 10) <= ?
+         ORDER BY substr(date, 1, 10) ASC, date ASC
+         LIMIT 1`
+      ).get(m.id, ytdStartDate, date);
+      if (ytdStartRow?.close != null && ytdStartRow.close > 0) {
+        const ytdStartDay = (ytdStartRow.date || '').split('T')[0];
+        const ytdCurrency = ytdStartRow.currency || currency;
+        const ytdStartRate = getRate(ytdCurrency, ytdStartDay);
+        const priceRate = getRate(ytdCurrency, date);
+        const priceEur = price * priceRate;
+        const ytdStartEur = ytdStartRow.close * ytdStartRate;
+        ytdChange = (priceEur - ytdStartEur) * m.quantity;
+        ytdChangePct = ((priceEur - ytdStartEur) / ytdStartEur) * 100;
+      }
+    }
+
     if (totalValueInEur != null) totalValueEur += totalValueInEur;
     if (prevTotalValueInEur != null) totalPrevValueEur += prevTotalValueInEur;
 
@@ -1543,6 +1711,8 @@ app.get('/api/time-travel', (req, res) => {
       total_value_eur: totalValueInEur != null ? Math.round(totalValueInEur * 100) / 100 : null,
       daily_change_eur: dailyChange != null ? Math.round(dailyChange * 100) / 100 : null,
       daily_change_pct: dailyChangePct != null ? Math.round(dailyChangePct * 100) / 100 : null,
+      ytd_change_eur: ytdChange != null ? Math.round(ytdChange * 100) / 100 : null,
+      ytd_change_pct: ytdChangePct != null ? Math.round(ytdChangePct * 100) / 100 : null,
     });
   }
 
