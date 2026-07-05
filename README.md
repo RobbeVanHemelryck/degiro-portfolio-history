@@ -61,7 +61,7 @@ The app expects two Excel files from DEGIRO:
 3. Export as Excel (.xlsx)
 4. Upload via gear icon => "Upload transactions".
 
-Tip: when importing for the first time, upload both files using the same full date range so transaction history and cash movements are aligned.
+Tip: When importing for the first time, upload both files using the same full date range so transaction history and cash movements are aligned.
 
 ## Mobile Preview
 
