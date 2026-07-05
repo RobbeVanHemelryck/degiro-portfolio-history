@@ -1,7 +1,7 @@
 name: Release
 
 on:
-  pull_request:
+  pull_request_target:
     types: [closed]
 
 permissions:
@@ -37,7 +37,7 @@ jobs:
           echo "Releasing version $version"
 
       - name: Log in to Docker Hub
-        uses: docker/login-action@v3
+        uses: docker/login-action@v4
         with:
           username: taltiko
           password: ${{ secrets.DOCKERHUB_TOKEN }}
