@@ -100,6 +100,41 @@ function initDb() {
     );
     CREATE INDEX IF NOT EXISTS idx_cash_movements_date ON cash_movements(date);
     CREATE INDEX IF NOT EXISTS idx_cash_movements_type ON cash_movements(type);
+
+    -- User preferences
+    CREATE TABLE IF NOT EXISTS user_preferences (
+      key TEXT PRIMARY KEY,
+      value TEXT NOT NULL,
+      updated_at TEXT DEFAULT CURRENT_TIMESTAMP
+    );
+
+    -- Manual / other-broker holdings
+    CREATE TABLE IF NOT EXISTS manual_holdings (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      display_name TEXT NOT NULL,
+      yahoo_ticker TEXT NOT NULL,
+      quantity REAL NOT NULL,
+      cost_basis_eur REAL NOT NULL,
+      purchase_date TEXT,
+      currency TEXT DEFAULT 'EUR',
+      broker TEXT,
+      created_at TEXT DEFAULT CURRENT_TIMESTAMP
+    );
+    CREATE INDEX IF NOT EXISTS idx_manual_holdings_ticker ON manual_holdings(yahoo_ticker);
+
+    CREATE TABLE IF NOT EXISTS manual_holding_prices (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      manual_holding_id INTEGER REFERENCES manual_holdings(id) ON DELETE CASCADE,
+      date TEXT,
+      open REAL,
+      high REAL,
+      low REAL,
+      close REAL,
+      volume INTEGER,
+      currency TEXT DEFAULT 'EUR'
+    );
+    CREATE INDEX IF NOT EXISTS idx_manual_holding_prices_holding ON manual_holding_prices(manual_holding_id);
+    CREATE INDEX IF NOT EXISTS idx_manual_holding_prices_date ON manual_holding_prices(date);
   `);
 }
 

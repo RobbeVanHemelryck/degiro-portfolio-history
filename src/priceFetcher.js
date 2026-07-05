@@ -27,6 +27,125 @@ async function rateLimitWait() {
 }
 
 const MAX_RETRIES = 3;
+
+/**
+ * Fetch historical prices for a manual/other-broker holding and store them.
+ * Returns the number of new price records added.
+ */
+async function fetchManualHoldingPrices(manualHolding) {
+  const db = getDb();
+  const ticker = manualHolding.yahoo_ticker;
+  if (!ticker) return 0;
+
+  const latestDaily = db.prepare(
+    'SELECT date FROM manual_holding_prices WHERE manual_holding_id = ? AND date GLOB ? ORDER BY date DESC LIMIT 1'
+  ).get(manualHolding.id, '????-??-??');
+
+  let startDate;
+  if (latestDaily?.date) {
+    startDate = new Date(`${latestDaily.date}T00:00:00Z`);
+    startDate.setUTCDate(startDate.getUTCDate() - 7);
+  } else {
+    const now = new Date();
+    const yearStart = new Date(now.getFullYear(), 0, 1);
+    if (manualHolding.purchase_date) {
+      const purchaseDate = new Date(manualHolding.purchase_date);
+      startDate = purchaseDate < yearStart ? purchaseDate : yearStart;
+    } else {
+      startDate = yearStart;
+    }
+  }
+
+  const endDate = new Date();
+
+  for (let attempt = 0; attempt <= MAX_RETRIES; attempt++) {
+    await rateLimitWait();
+
+    try {
+      const yf = await getYahoo();
+      const result = await yf.chart(ticker, {
+        period1: startDate,
+        period2: endDate,
+        interval: '1d',
+      });
+
+      if (!result?.quotes?.length) break;
+
+      let actualCurrency = manualHolding.currency;
+      if (result.meta?.currency) {
+        actualCurrency = result.meta.currency;
+      }
+
+      const insert = db.prepare(`
+        INSERT OR IGNORE INTO manual_holding_prices (manual_holding_id, date, open, high, low, close, volume, currency)
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+      `);
+
+      let count = 0;
+      for (const q of result.quotes) {
+        if (q.close == null) continue;
+        const dateStr = q.date.toISOString().split('T')[0];
+
+        const existing = db.prepare(
+          'SELECT id FROM manual_holding_prices WHERE manual_holding_id = ? AND date = ?'
+        ).get(manualHolding.id, dateStr);
+
+        if (!existing) {
+          insert.run(
+            manualHolding.id, dateStr,
+            q.open, q.high, q.low, q.close,
+            q.volume || 0, actualCurrency
+          );
+          count++;
+        }
+      }
+
+      if (actualCurrency && actualCurrency !== manualHolding.currency) {
+        db.prepare('UPDATE manual_holdings SET currency = ? WHERE id = ?').run(actualCurrency, manualHolding.id);
+      }
+
+      return count;
+    } catch (err) {
+      const isRateLimit = err.message && (err.message.includes('Too Many Requests') || err.message.includes('429'));
+      if (isRateLimit && attempt < MAX_RETRIES) {
+        const delay = RETRY_BASE_DELAY * (attempt + 1);
+        console.warn(`Rate limited fetching ${ticker}, retrying in ${delay / 1000}s (attempt ${attempt + 1}/${MAX_RETRIES})`);
+        await new Promise((r) => setTimeout(r, delay));
+        continue;
+      }
+
+      console.error(`Error fetching prices for manual holding ${manualHolding.display_name} (${ticker}):`, err.message);
+      break;
+    }
+  }
+
+  return 0;
+}
+
+/**
+ * Persist a live quote snapshot for a manual holding.
+ */
+function persistManualLivePriceSnapshot(db, manualHolding, quote) {
+  if (!quote || quote.price == null) return null;
+
+  const timestamp = new Date().toISOString().replace(/\.\d{3}Z$/, 'Z');
+  db.prepare(`
+    INSERT INTO manual_holding_prices (manual_holding_id, date, open, high, low, close, volume, currency)
+    VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+  `).run(
+    manualHolding.id,
+    timestamp,
+    quote.open ?? quote.price,
+    quote.high ?? quote.price,
+    quote.low ?? quote.price,
+    quote.price,
+    quote.volume || 0,
+    quote.currency || manualHolding.currency
+  );
+
+  return timestamp;
+}
+
 const RETRY_BASE_DELAY = 10000; // 10 seconds base delay for retries
 
 /**
@@ -50,12 +169,17 @@ async function fetchStockPrices(stock) {
     startDate = new Date(`${latestDaily.date}T00:00:00Z`);
     startDate.setUTCDate(startDate.getUTCDate() - 7);
   } else {
+    const now = new Date();
+    const yearStart = new Date(now.getFullYear(), 0, 1);
     const earliest = db.prepare(
       'SELECT MIN(date) as min_date FROM transactions WHERE stock_id = ?'
     ).get(stock.id);
-    startDate = earliest?.min_date
-      ? new Date(earliest.min_date)
-      : new Date(Date.now() - 365 * 24 * 60 * 60 * 1000);
+    const earliestDate = earliest?.min_date ? new Date(earliest.min_date) : null;
+    if (earliestDate) {
+      startDate = earliestDate < yearStart ? earliestDate : yearStart;
+    } else {
+      startDate = yearStart;
+    }
   }
 
   const endDate = new Date();
@@ -247,4 +371,11 @@ async function fetchLiveQuote(ticker) {
   }
 }
 
-module.exports = { fetchStockPrices, fetchIndexPrices, fetchLiveQuote, rateLimitWait };
+module.exports = {
+  fetchStockPrices,
+  fetchManualHoldingPrices,
+  fetchIndexPrices,
+  fetchLiveQuote,
+  persistManualLivePriceSnapshot,
+  rateLimitWait,
+};

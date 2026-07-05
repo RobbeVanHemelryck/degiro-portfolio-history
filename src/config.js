@@ -8,6 +8,11 @@ const config = {
   // Server
   HOST: process.env.DEGIRO_PORTFOLIO_HOST || '0.0.0.0',
   PORT: parseInt(process.env.DEGIRO_PORTFOLIO_PORT || '8000', 10),
+  PUBLIC_URL: process.env.DEGIRO_PORTFOLIO_PUBLIC_URL || '',
+  TRUST_PROXY: process.env.DEGIRO_PORTFOLIO_TRUST_PROXY !== '0' && process.env.DEGIRO_PORTFOLIO_TRUST_PROXY !== 'false',
+
+  // Feature flags
+  INCLUDE_OTHER_BROKERS_DEFAULT: process.env.DEGIRO_PORTFOLIO_INCLUDE_OTHER_BROKERS_DEFAULT === '1' || process.env.DEGIRO_PORTFOLIO_INCLUDE_OTHER_BROKERS_DEFAULT === 'true',
 
   // Data provider: 'yahoo' (only yahoo supported in Node version)
   PRICE_DATA_PROVIDER: 'yahoo',

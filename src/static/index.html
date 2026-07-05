@@ -7,8 +7,44 @@
     <link rel="icon" type="image/svg+xml" href="/static/favicon.svg">
     <link rel="icon" type="image/png" sizes="32x32" href="/static/favicon.png">
     <link rel="icon" type="image/png" sizes="16x16" href="/static/favicon-16x16.png">
+    <link rel="apple-touch-icon" href="/static/favicon.png">
+    <link rel="manifest" href="/manifest.json">
+    <meta name="theme-color" content="#1098c9">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="default">
     <script src="https://cdn.plot.ly/plotly-2.27.0.min.js"></script>
     <style>
+        :root {
+            --bg-page: #f5f7fa;
+            --card-bg: #ffffff;
+            --bg-secondary: #f7fafc;
+            --bg-tertiary: #edf2f7;
+            --border: #e2e8f0;
+            --border-muted: #cbd5e0;
+            --border-light: #f0f0f0;
+            --text: #2d3748;
+            --text-secondary: #4a5568;
+            --text-muted: #718096;
+            --text-muted-light: #a0aec0;
+            --text-inverse: #ffffff;
+            --accent: #1098c9;
+        }
+
+        [data-theme="dark"] {
+            --bg-page: #0f172a;
+            --card-bg: #1e293b;
+            --bg-secondary: #334155;
+            --bg-tertiary: #475569;
+            --border: #475569;
+            --border-muted: #64748b;
+            --border-light: #334155;
+            --text: #f1f5f9;
+            --text-secondary: #cbd5e1;
+            --text-muted: #94a3b8;
+            --text-muted-light: #64748b;
+            --text-inverse: #0f172a;
+        }
+
         * {
             margin: 0;
             padding: 0;
@@ -26,6 +62,10 @@
             min-height: 100vh;
             padding: 20px;
             font-size: 14px;
+        }
+
+        [data-theme="dark"] body {
+            background: linear-gradient(135deg, #1e1b4b 0%, #312e81 100%);
         }
 
         .container {
@@ -97,7 +137,7 @@
             right: 20px;
             padding: 15px 20px;
             border-radius: 8px;
-            background: white;
+            background: var(--card-bg);
             box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
             z-index: 1000;
             display: none;
@@ -118,7 +158,7 @@
             width: 400px;
             padding: 20px;
             border-radius: 8px;
-            background: white;
+            background: var(--card-bg);
             box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
             z-index: 1000;
             display: none;
@@ -127,14 +167,14 @@
         .upload-progress-message {
             margin-bottom: 12px;
             font-size: 14px;
-            color: #333;
+            color: var(--text);
             font-weight: 500;
         }
 
         .progress-bar-background {
             width: 100%;
             height: 8px;
-            background: #e2e8f0;
+            background: var(--border);
             border-radius: 4px;
             overflow: hidden;
             position: relative;
@@ -182,7 +222,7 @@
         }
 
         .stock-card {
-            background: white;
+            background: var(--card-bg);
             padding: 12px 15px;
             border-radius: 8px;
             box-shadow: 0 3px 10px rgba(0, 0, 0, 0.08);
@@ -206,13 +246,13 @@
         .stock-name {
             font-size: 0.85em;
             font-weight: 600;
-            color: #2d3748;
+            color: var(--text);
             margin-bottom: 3px;
             line-height: 1.2;
         }
 
         .stock-name a {
-            color: #2d3748;
+            color: var(--text);
             text-decoration: none;
             transition: color 0.2s;
         }
@@ -236,7 +276,7 @@
         }
 
         .stock-ticker a {
-            color: #718096;
+            color: var(--text-muted);
             text-decoration: none;
             transition: color 0.2s;
         }
@@ -247,7 +287,7 @@
         }
 
         .stock-exchange {
-            color: #a0aec0;
+            color: var(--text-muted-light);
             font-size: 0.6em;
             margin-bottom: 4px;
         }
@@ -262,7 +302,7 @@
         .stock-price {
             font-size: 0.8em;
             margin-bottom: 3px;
-            color: #2d3748;
+            color: var(--text);
         }
 
         .stock-price .positive {
@@ -286,12 +326,12 @@
         }
 
         .stock-meta {
-            color: #718096;
+            color: var(--text-muted);
             font-size: 0.65em;
         }
 
         .chart-container {
-            background: white;
+            background: var(--card-bg);
             padding: 20px;
             border-radius: 15px;
             box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
@@ -300,7 +340,7 @@
 
         .chart-title {
             font-size: 1.3em;
-            color: #2d3748;
+            color: var(--text);
             margin-bottom: 15px;
             font-weight: 600;
         }
@@ -331,9 +371,78 @@
             height: 400px;
         }
 
+        .chart-range-bar {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 6px;
+            justify-content: center;
+            margin: 0;
+        }
+
+        .chart-range-btn {
+            background: var(--bg-secondary);
+            border: 1px solid var(--border);
+            color: var(--text-secondary);
+            padding: 5px 12px;
+            border-radius: 6px;
+            font-size: 0.82em;
+            font-weight: 600;
+            cursor: pointer;
+            transition: background 0.2s, border-color 0.2s, color 0.2s;
+        }
+
+        .chart-range-btn:hover {
+            background: var(--bg-tertiary);
+            border-color: var(--border-muted);
+        }
+
+        .chart-range-btn.active {
+            background: #1098c9;
+            border-color: #1098c9;
+            color: #ffffff;
+        }
+
+        .chart-controls {
+            display: flex;
+            flex-wrap: wrap;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            margin: 8px 0 12px;
+        }
+
+        .chart-scale-toggle {
+            display: flex;
+            justify-content: center;
+            margin: 0;
+        }
+
+        .chart-scale-btn {
+            background: var(--card-bg);
+            border: 1px solid var(--border);
+            color: var(--text-secondary);
+            padding: 5px 12px;
+            border-radius: 6px;
+            font-size: 0.82em;
+            font-weight: 600;
+            cursor: pointer;
+            transition: background 0.2s, border-color 0.2s, color 0.2s;
+        }
+
+        .chart-scale-btn:hover {
+            background: var(--bg-secondary);
+            border-color: var(--border-muted);
+        }
+
+        .chart-scale-btn.active {
+            background: #48bb78;
+            border-color: #48bb78;
+            color: #ffffff;
+        }
+
         .chart-subtitle {
             font-size: 1em;
-            color: #4a5568;
+            color: var(--text-secondary);
             margin: 15px 0 8px 0;
             font-weight: 600;
         }
@@ -341,9 +450,9 @@
         .tranche-list {
             margin-top: 15px;
             padding: 15px;
-            background: #f7fafc;
+            background: var(--bg-secondary);
             border-radius: 8px;
-            border: 1px solid #e2e8f0;
+            border: 1px solid var(--border);
         }
 
         .tranche-item {
@@ -351,7 +460,7 @@
             align-items: center;
             padding: 10px;
             margin-bottom: 8px;
-            background: white;
+            background: var(--card-bg);
             border-radius: 6px;
             border-left: 4px solid;
             box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
@@ -402,12 +511,12 @@
 
         .tranche-date {
             font-weight: 600;
-            color: #2d3748;
+            color: var(--text);
             font-size: 0.95em;
         }
 
         .tranche-quantity {
-            color: #718096;
+            color: var(--text-muted);
             font-size: 0.85em;
             margin-top: 2px;
         }
@@ -490,19 +599,19 @@
         }
 
         .stat-label {
-            color: #718096;
+            color: var(--text-muted);
             font-size: 0.75em;
             margin-bottom: 4px;
         }
 
         .stat-value {
-            color: #2d3748;
+            color: var(--text);
             font-size: 1.2em;
             font-weight: bold;
         }
 
         .portfolio-summary {
-            background: white;
+            background: var(--card-bg);
             padding: 10px 15px;
             border-radius: 12px;
             box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
@@ -517,7 +626,7 @@
         }
 
         .panel-title {
-            color: #2d3748;
+            color: var(--text);
             font-size: 1.3em;
             font-weight: 600;
             margin: 0;
@@ -538,8 +647,8 @@
 
         .panel-toggle {
             border: none;
-            background: #edf2f7;
-            color: #4a5568;
+            background: var(--bg-tertiary);
+            color: var(--text-secondary);
             width: 30px;
             height: 30px;
             border-radius: 999px;
@@ -553,8 +662,8 @@
         }
 
         .panel-toggle:hover {
-            background: #e2e8f0;
-            color: #2d3748;
+            background: var(--border);
+            color: var(--text);
         }
 
         .panel-caret {
@@ -609,7 +718,7 @@
         }
 
         .portfolio-summary h2 {
-            color: #2d3748;
+            color: var(--text);
             font-size: 1.6em;
             margin-bottom: 4px;
         }
@@ -648,7 +757,7 @@
             padding: 0;
             line-height: 1;
             position: absolute;
-            right: 38px;
+            right: 68px;
             top: 50%;
             transform: translateY(-50%);
             transition: background 0.2s ease, transform 0.2s ease;
@@ -676,6 +785,282 @@
             to { transform: rotate(360deg); }
         }
 
+        @keyframes live-refresh-spin {
+            from { transform: rotate(0deg); }
+            to { transform: rotate(360deg); }
+        }
+
+        /* Include other-brokers toggle in header */
+        .broker-toggle {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            color: #ffffff;
+            font-size: 0.85em;
+            font-weight: 500;
+            cursor: pointer;
+            position: absolute;
+            left: 0;
+            top: 50%;
+            transform: translateY(-50%);
+            white-space: nowrap;
+            user-select: none;
+        }
+
+        .broker-toggle input {
+            display: none;
+        }
+
+        .broker-toggle-slider {
+            position: relative;
+            width: 36px;
+            height: 20px;
+            background: rgba(255, 255, 255, 0.25);
+            border-radius: 20px;
+            transition: background 0.2s;
+            flex-shrink: 0;
+        }
+
+        .broker-toggle input:checked + .broker-toggle-slider {
+            background: var(--card-bg);
+        }
+
+        .broker-toggle-slider::after {
+            content: '';
+            position: absolute;
+            left: 2px;
+            top: 2px;
+            width: 16px;
+            height: 16px;
+            background: #1098c9;
+            border-radius: 50%;
+            transition: transform 0.2s;
+        }
+
+        .broker-toggle input:checked + .broker-toggle-slider::after {
+            transform: translateX(16px);
+        }
+
+        /* Manual holding modal */
+        .modal-overlay {
+            position: fixed;
+            inset: 0;
+            background: rgba(0, 0, 0, 0.45);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
+            padding: 16px;
+        }
+
+        .modal {
+            background: var(--card-bg);
+            border-radius: 14px;
+            width: 100%;
+            max-width: 460px;
+            box-shadow: 0 20px 50px rgba(0, 0, 0, 0.25);
+            overflow: hidden;
+        }
+
+        .modal-header {
+            padding: 18px 20px;
+            border-bottom: 1px solid var(--border);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .modal-header h3 {
+            margin: 0;
+            font-size: 1.15em;
+            color: var(--text);
+        }
+
+        .modal-close {
+            background: none;
+            border: none;
+            font-size: 1.4em;
+            color: var(--text-muted-light);
+            cursor: pointer;
+            line-height: 1;
+            padding: 0;
+            width: 32px;
+            height: 32px;
+            border-radius: 8px;
+            transition: background 0.2s, color 0.2s;
+        }
+
+        .modal-close:hover {
+            background: var(--bg-secondary);
+            color: var(--text);
+        }
+
+        .modal-body {
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            gap: 14px;
+        }
+
+        .form-group {
+            display: flex;
+            flex-direction: column;
+            gap: 5px;
+        }
+
+        .form-group label {
+            font-size: 0.85em;
+            font-weight: 600;
+            color: var(--text-secondary);
+        }
+
+        .form-group input,
+        .form-group select {
+            padding: 10px 12px;
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            font-size: 0.95em;
+            color: var(--text);
+            background: var(--card-bg);
+        }
+
+        .form-group input:focus,
+        .form-group select:focus {
+            outline: none;
+            border-color: #1098c9;
+            box-shadow: 0 0 0 3px rgba(16, 152, 201, 0.12);
+        }
+
+        .price-input-toggle {
+            display: flex;
+            gap: 10px;
+            align-items: center;
+        }
+
+        .price-input-toggle label {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            font-size: 0.85em;
+            color: var(--text-secondary);
+            cursor: pointer;
+        }
+
+        .modal-actions {
+            display: flex;
+            justify-content: flex-end;
+            gap: 10px;
+            padding: 0 20px 20px;
+        }
+
+        .modal-actions button {
+            padding: 10px 16px;
+            border-radius: 8px;
+            border: none;
+            font-size: 0.9em;
+            font-weight: 600;
+            cursor: pointer;
+            transition: background 0.2s, transform 0.1s;
+        }
+
+        .modal-actions .btn-primary {
+            background: #1098c9;
+            color: #ffffff;
+        }
+
+        .modal-actions .btn-primary:hover {
+            background: #0e86b0;
+        }
+
+        .modal-actions .btn-secondary {
+            background: var(--bg-tertiary);
+            color: var(--text-secondary);
+        }
+
+        .modal-actions .btn-secondary:hover {
+            background: var(--border);
+        }
+
+        /* Other brokers panel */
+        .other-brokers-empty {
+            color: var(--text-muted);
+            font-size: 0.9em;
+            padding: 12px 0;
+        }
+
+        .other-brokers-list {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        .other-broker-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 12px 14px;
+            background: var(--bg-secondary);
+            border-radius: 10px;
+            border: 1px solid var(--border);
+        }
+
+        .other-broker-left {
+            display: flex;
+            flex-direction: column;
+            gap: 2px;
+        }
+
+        .other-broker-name {
+            font-weight: 700;
+            color: var(--text);
+        }
+
+        .other-broker-meta {
+            font-size: 0.8em;
+            color: var(--text-muted);
+        }
+
+        .other-broker-right {
+            text-align: right;
+        }
+
+        .other-broker-value {
+            font-weight: 700;
+            color: var(--text);
+        }
+
+        .other-broker-change {
+            font-size: 0.85em;
+            font-weight: 600;
+            color: var(--text);
+        }
+
+        .other-broker-change.positive { color: #48bb78; }
+        .other-broker-change.negative { color: #fc8181; }
+
+        .other-broker-delete {
+            background: none;
+            border: none;
+            color: #fc8181;
+            cursor: pointer;
+            font-size: 0.85em;
+            font-weight: 600;
+            padding: 4px 8px;
+            border-radius: 6px;
+            margin-left: 8px;
+            transition: background 0.2s;
+        }
+
+        .other-broker-delete:hover {
+            background: #fff5f5;
+        }
+
+        .other-brokers-actions {
+            display: flex;
+            gap: 10px;
+            margin-top: 12px;
+        }
+
         .summary-grid {
             display: grid;
             grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
@@ -696,7 +1081,7 @@
         .summary-table td {
             text-align: center;
             padding: 14px 16px;
-            background: #ffffff;
+            background: var(--card-bg);
             border: none;
             border-radius: 10px;
             vertical-align: top;
@@ -737,8 +1122,8 @@
 
         .summary-breakdown .net-line {
             font-weight: 700;
-            color: #2d3748;
-            border-top: 1px solid #cbd5e0;
+            color: var(--text);
+            border-top: 1px solid var(--border-muted);
             padding-top: 2px;
             margin-top: 2px;
         }
@@ -790,7 +1175,7 @@
         }
 
         .modal-content {
-            background: white;
+            background: var(--card-bg);
             border-radius: 12px;
             padding: 32px;
             max-width: 500px;
@@ -814,12 +1199,12 @@
         .modal-title {
             font-size: 24px;
             font-weight: 700;
-            color: #2d3748;
+            color: var(--text);
             margin: 0;
         }
 
         .modal-message {
-            color: #4a5568;
+            color: var(--text-secondary);
             font-size: 16px;
             line-height: 1.6;
             margin-bottom: 24px;
@@ -852,12 +1237,12 @@
         }
 
         .modal-btn-cancel {
-            background: #e2e8f0;
-            color: #4a5568;
+            background: var(--border);
+            color: var(--text-secondary);
         }
 
         .modal-btn-cancel:hover {
-            background: #cbd5e0;
+            background: var(--border-muted);
             transform: translateY(-1px);
             box-shadow: 0 6px 16px rgba(0, 0, 0, 0.15);
         }
@@ -874,7 +1259,7 @@
         }
 
         .summary-label {
-            color: #718096;
+            color: var(--text-muted);
             font-size: 0.72em;
             margin-bottom: 6px;
             text-transform: uppercase;
@@ -885,7 +1270,7 @@
         }
 
         .summary-value {
-            color: #2d3748;
+            color: var(--text);
             font-size: 1.35em;
             font-weight: bold;
         }
@@ -908,7 +1293,7 @@
         }
 
         .graph-overview-label {
-            color: #718096;
+            color: var(--text-muted);
             font-size: 0.74em;
             text-transform: uppercase;
             letter-spacing: 0.08em;
@@ -917,14 +1302,14 @@
         }
 
         .graph-overview-value {
-            color: #2d3748;
+            color: var(--text);
             font-size: 2em;
             font-weight: 700;
             line-height: 1.05;
         }
 
         .graph-overview-meta {
-            color: #718096;
+            color: var(--text-muted);
             font-size: 0.85em;
             margin-top: 4px;
         }
@@ -956,13 +1341,13 @@
         .history-table th,
         .history-table td {
             padding: 10px 12px;
-            border-bottom: 1px solid #e2e8f0;
+            border-bottom: 1px solid var(--border);
             text-align: right;
             white-space: nowrap;
         }
 
         .history-table th {
-            color: #718096;
+            color: var(--text-muted);
             font-size: 0.76em;
             text-transform: uppercase;
             letter-spacing: 0.06em;
@@ -980,7 +1365,7 @@
 
         .history-month {
             font-weight: 600;
-            color: #2d3748;
+            color: var(--text);
         }
 
         .history-year-row {
@@ -993,6 +1378,12 @@
             font-weight: 700;
             color: #667eea;
             padding: 12px;
+        }
+
+        .history-value,
+        .history-gain,
+        .history-pct {
+            color: var(--text);
         }
 
         .history-gain.positive,
@@ -1110,7 +1501,7 @@
         }
 
         .settings-popup {
-            background: white;
+            background: var(--card-bg);
             border-radius: 14px;
             padding: 20px;
             width: 90%;
@@ -1122,7 +1513,7 @@
         .settings-popup h3 {
             margin: 0 0 16px 0;
             font-size: 1.1em;
-            color: #2d3748;
+            color: var(--text);
         }
 
         .settings-popup .settings-actions {
@@ -1137,6 +1528,40 @@
             padding: 12px 16px;
             font-size: 0.9em;
             text-align: center;
+        }
+
+        .settings-section {
+            margin-top: 16px;
+            padding-top: 16px;
+            border-top: 1px solid var(--border);
+        }
+
+        .settings-section h4 {
+            margin: 0 0 10px 0;
+            font-size: 0.9em;
+            color: var(--text);
+        }
+
+        .summary-card-toggles {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 8px;
+        }
+
+        .summary-card-toggle {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-size: 0.85em;
+            color: var(--text-secondary);
+            cursor: pointer;
+        }
+
+        .summary-card-toggle input {
+            width: 16px;
+            height: 16px;
+            accent-color: var(--accent);
+            cursor: pointer;
         }
 
         .settings-popup-close {
@@ -1163,7 +1588,7 @@
         @media (max-width: 600px) {
             body {
                 padding: 0;
-                background: white;
+                background: var(--card-bg);
             }
 
             .container {
@@ -1175,7 +1600,7 @@
                 border-radius: 0;
                 box-shadow: none;
                 margin-bottom: 0;
-                border-bottom: 1px solid #e2e8f0;
+                border-bottom: 1px solid var(--border);
             }
 
             #portfolio-header {
@@ -1197,6 +1622,16 @@
                 flex-wrap: nowrap;
                 align-items: center;
                 min-height: 40px;
+            }
+
+            .broker-toggle {
+                position: static;
+                transform: none;
+                margin-right: auto;
+            }
+
+            .broker-toggle-label {
+                display: none;
             }
 
             .summary-title-wrap {
@@ -1251,7 +1686,7 @@
                 border-radius: 0;
                 box-shadow: none;
                 margin-bottom: 0;
-                border-bottom: 1px solid #e2e8f0;
+                border-bottom: 1px solid var(--border);
             }
 
             .chart-title {
@@ -1348,12 +1783,12 @@
             justify-content: center;
             min-width: 0;
             padding: 8px 12px;
-            border: 2px solid #e2e8f0;
+            border: 2px solid var(--border);
             border-radius: 999px;
             font-size: 0.82em;
             font-weight: 700;
-            color: #2d3748;
-            background: white;
+            color: var(--text);
+            background: var(--card-bg);
             white-space: nowrap;
             transition: border-color 0.2s, box-shadow 0.2s;
         }
@@ -1376,25 +1811,25 @@
         }
 
         .tt-nav-btn {
-            background: #edf2f7;
+            background: var(--bg-tertiary);
             border: none;
             padding: 8px 12px;
             border-radius: 8px;
             cursor: pointer;
             font-size: 0.9em;
             font-weight: 600;
-            color: #4a5568;
+            color: var(--text-secondary);
             transition: all 0.2s;
             white-space: nowrap;
         }
 
         .tt-nav-btn:hover {
-            background: #e2e8f0;
-            color: #2d3748;
+            background: var(--border);
+            color: var(--text);
         }
 
         .tt-header {
-            background: white;
+            background: var(--card-bg);
             padding: 0;
             margin-bottom: 16px;
             display: flex;
@@ -1408,7 +1843,7 @@
         .tt-header-value {
             font-size: 1.6em;
             font-weight: 700;
-            color: #2d3748;
+            color: var(--text);
         }
 
         .tt-header-change {
@@ -1429,7 +1864,7 @@
             align-items: center;
             justify-content: space-between;
             padding: 10px 0 6px 0;
-            border-bottom: 1px solid #e2e8f0;
+            border-bottom: 1px solid var(--border);
             margin-bottom: 0;
             cursor: pointer;
             user-select: none;
@@ -1438,14 +1873,14 @@
         .tt-section-title {
             font-size: 0.85em;
             font-weight: 700;
-            color: #718096;
+            color: var(--text-muted);
             text-transform: uppercase;
             letter-spacing: 0.5px;
         }
 
         .tt-section-toggle {
             font-size: 1em;
-            color: #718096;
+            color: var(--text-muted);
             transition: transform 0.2s;
         }
 
@@ -1471,7 +1906,7 @@
             align-items: center;
             padding: 6px 0;
             font-size: 0.75em;
-            color: #a0aec0;
+            color: var(--text-muted-light);
             font-weight: 600;
         }
 
@@ -1485,13 +1920,23 @@
             justify-content: space-between;
             align-items: flex-start;
             padding: 12px 0;
-            border-bottom: 1px solid #f0f0f0;
+            border-bottom: 1px solid var(--border-light);
             gap: 12px;
         }
 
         .tt-holding-row:last-child {
             border-bottom: none;
         }
+
+        .tt-holding-ytd {
+            font-size: 0.75em;
+            font-weight: 600;
+            margin-top: 2px;
+            color: var(--text);
+        }
+
+        .tt-holding-ytd.positive { color: #48bb78; }
+        .tt-holding-ytd.negative { color: #fc8181; }
 
         .tt-holding-left {
             flex: 1;
@@ -1500,14 +1945,14 @@
 
         .tt-holding-name {
             font-weight: 600;
-            color: #2d3748;
+            color: var(--text);
             font-size: 0.95em;
             line-height: 1.3;
         }
 
         .tt-holding-meta {
             font-size: 0.78em;
-            color: #a0aec0;
+            color: var(--text-muted-light);
             margin-top: 2px;
         }
 
@@ -1518,7 +1963,7 @@
 
         .tt-holding-value {
             font-weight: 700;
-            color: #2d3748;
+            color: var(--text);
             font-size: 0.95em;
         }
 
@@ -1534,14 +1979,14 @@
         .tt-empty {
             text-align: center;
             padding: 30px;
-            color: #a0aec0;
+            color: var(--text-muted-light);
             font-size: 0.95em;
         }
 
         .tt-loading {
             text-align: center;
             padding: 20px;
-            color: #718096;
+            color: var(--text-muted);
         }
     </style>
 </head>
@@ -1570,6 +2015,11 @@
 
         <div id="portfolio-header" class="portfolio-summary" style="display: none;">
             <div class="summary-header">
+                <label class="broker-toggle" title="Include other-broker holdings in totals and graph">
+                    <input type="checkbox" id="include-other-brokers-toggle" onchange="onIncludeOtherBrokersToggled()">
+                    <span class="broker-toggle-slider"></span>
+                    <span class="broker-toggle-label">Other brokers</span>
+                </label>
                 <div class="summary-title-wrap">
                     <h2>DEGIRO Portfolio</h2>
                 </div>
@@ -1597,6 +2047,7 @@
                 <button id="live-refresh-btn" class="live-refresh-btn" onclick="refreshLivePrices(true)" aria-label="Refresh live prices" title="Refresh live prices">
                     <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M12 6v3l4-4-4-4v3c-4.42 0-8 3.58-8 8 0 1.57.46 3.03 1.24 4.26L6.7 14.8c-.45-.83-.7-1.79-.7-2.8 0-3.31 2.69-6 6-6zm6.76 1.74L17.3 9.2c.44.84.7 1.79.7 2.8 0 3.31-2.69 6-6 6v-3l-4 4 4 4v-3c4.42 0 8-3.58 8-8 0-1.57-.46-3.03-1.24-4.26z"/></svg>
                 </button>
+                <button id="theme-toggle" class="live-refresh-btn" onclick="toggleTheme()" aria-label="Toggle dark mode" title="Toggle dark mode" style="right:34px;">🌙</button>
             </div>
         </div>
 
@@ -1614,8 +2065,7 @@
             </div>
         </div>
 
-
-
+        <!-- Other Brokers -->
         <!-- Portfolio Valuation Chart -->
         <div id="portfolio-chart-section" class="portfolio-summary panel" style="display: none;">
             <div class="panel-header">
@@ -1627,6 +2077,10 @@
             <div class="panel-content">
                 <div class="panel-content-inner">
                     <div id="tt-header-display"></div>
+                    <div id="chart-controls" class="chart-controls">
+                        <div id="chart-range-selector"></div>
+                        <div id="chart-scale-toggle"></div>
+                    </div>
                     <div id="portfolio-valuation-chart"></div>
                     <div class="tt-date-picker">
                         <button class="tt-nav-btn" type="button" onclick="ttShiftDate(-1)">◀ Prev</button>
@@ -1669,16 +2123,37 @@
                     <div style="max-height: 400px; overflow-y: auto;">
                         <table id="cash-movements-table" style="width: 100%; border-collapse: collapse; font-size: 0.85em;">
                             <thead>
-                                <tr style="background: #f7fafc; position: sticky; top: 0;">
-                                    <th style="padding: 8px 12px; text-align: left; border-bottom: 2px solid #e2e8f0; color: #4a5568;">Date</th>
-                                    <th style="padding: 8px 12px; text-align: left; border-bottom: 2px solid #e2e8f0; color: #4a5568;">Type</th>
-                                    <th style="padding: 8px 12px; text-align: left; border-bottom: 2px solid #e2e8f0; color: #4a5568;">Description</th>
-                                    <th style="padding: 8px 12px; text-align: right; border-bottom: 2px solid #e2e8f0; color: #4a5568;">Amount</th>
-                                    <th style="padding: 8px 12px; text-align: right; border-bottom: 2px solid #e2e8f0; color: #4a5568;">Balance</th>
+                                <tr style="background: var(--bg-secondary); position: sticky; top: 0;">
+                                    <th style="padding: 8px 12px; text-align: left; border-bottom: 2px solid var(--border); color: var(--text-secondary);">Date</th>
+                                    <th style="padding: 8px 12px; text-align: left; border-bottom: 2px solid var(--border); color: var(--text-secondary);">Type</th>
+                                    <th style="padding: 8px 12px; text-align: left; border-bottom: 2px solid var(--border); color: var(--text-secondary);">Description</th>
+                                    <th style="padding: 8px 12px; text-align: right; border-bottom: 2px solid var(--border); color: var(--text-secondary);">Amount</th>
+                                    <th style="padding: 8px 12px; text-align: right; border-bottom: 2px solid var(--border); color: var(--text-secondary);">Balance</th>
                                 </tr>
                             </thead>
                             <tbody id="cash-movements-body"></tbody>
                         </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Other Brokers -->
+        <div id="other-brokers-section" class="portfolio-summary panel collapsed" style="display: none;">
+            <div class="panel-header">
+                <h3 class="panel-title">Other Brokers</h3>
+                <button class="panel-toggle" type="button" aria-label="Toggle Other Brokers" aria-expanded="false" onclick="togglePanel(this)">
+                    <span class="panel-caret">▾</span>
+                </button>
+            </div>
+            <div class="panel-content">
+                <div class="panel-content-inner">
+                    <div id="other-brokers-content">
+                        <div class="other-brokers-empty">No other-broker holdings added yet.</div>
+                    </div>
+                    <div class="other-brokers-actions">
+                        <button class="upload-btn upload-btn-green" onclick="openAddManualHoldingModal()">Add holding</button>
+                        <button class="upload-btn" onclick="refreshLivePrices(true)">Refresh prices</button>
                     </div>
                 </div>
             </div>
@@ -1689,6 +2164,9 @@
     <!-- Settings Popup (populated by JS) -->
     <div id="settings-popup-container"></div>
 
+    <!-- Manual holding modal (populated by JS) -->
+    <div id="manual-holding-modal-container"></div>
+
     <script>
         let holdings = [];
         let selectedStockId = null;
@@ -1697,10 +2175,35 @@
         let failureCount = 0;     // Track consecutive failures
         const FAILURE_THRESHOLD = 3;  // Require 3 consecutive failures before marking offline
         let uploadInProgress = false;  // Skip server checks during uploads
-        let ttSectionStates = { 'tt-stocks': true, 'tt-trackers': true };  // Track collapsed state (default collapsed)
+        let ttSectionStates = { 'tt-stocks': true, 'tt-trackers': true, 'tt-other-brokers': true };  // default collapsed
+        let serverConfig = null;
+        let includeOtherBrokers = false;
+        let selectedChartRange = 'YTD';
+        let chartAutoScale = false;
+
+        function getIncludeOtherBrokers() {
+            return includeOtherBrokers;
+        }
+
+        function otherBrokersQueryParam() {
+            return includeOtherBrokers ? '?includeOtherBrokers=1' : '';
+        }
         // Settings popup
         function openSettingsPopup() {
             const container = document.getElementById('settings-popup-container');
+            const cardLabels = {
+                current_value: 'Live Portfolio Value',
+                net_invested: 'Currently Invested',
+                deposits: 'Deposits',
+                current_profit_loss: 'Current Profit/Loss',
+                total_profit_loss: 'Total Profit/Loss',
+            };
+            const cardToggles = Object.entries(cardLabels).map(([key, label]) => `
+                <label class="summary-card-toggle">
+                    <input type="checkbox" ${summaryCardVisibility[key] ? 'checked' : ''} onchange="saveUserPreferences({ '${key}': this.checked })">
+                    <span>${label}</span>
+                </label>
+            `).join('');
             container.innerHTML = `
                 <div class="settings-popup-overlay" onclick="closeSettingsPopup(event)">
                     <div class="settings-popup" onclick="event.stopPropagation()">
@@ -1712,12 +2215,21 @@
                             <button class="upload-btn upload-btn-green" onclick="closeSettingsPopup(); document.getElementById('account-file-input').click();">
                                 Upload account statement
                             </button>
+                            <button class="upload-btn" onclick="closeSettingsPopup(); openAddManualHoldingModal();">
+                                Add other-broker holding
+                            </button>
                             <button class="upload-btn" onclick="closeSettingsPopup(); updateMarketData();">
                                 Update market data
                             </button>
                             <button class="purge-btn" onclick="closeSettingsPopup(); purgeDatabase();">
                                 Purge all data
                             </button>
+                        </div>
+                        <div class="settings-section">
+                            <h4>Summary cards</h4>
+                            <div class="summary-card-toggles">
+                                ${cardToggles}
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -1787,7 +2299,7 @@
 
                     // Show server status with uptime
                     if (statusIndicator) {
-                        statusIndicator.innerHTML = `<span style="color: #48bb78;">● Online</span> <span style="color: #a0aec0; font-size: 0.9em;">(uptime: ${data.uptime})</span>`;
+                        statusIndicator.innerHTML = `<span style="color: #48bb78;">● Online</span> <span style="color: var(--text-muted-light); font-size: 0.9em;">(uptime: ${data.uptime})</span>`;
                     }
                     offlineBanner.style.display = 'none';
                     setButtonsEnabled(true);
@@ -1927,10 +2439,17 @@
 
         let latestPortfolioSummary = null;
         let latestPortfolioHistoryData = null;
+        let summaryCardVisibility = {
+            current_value: true,
+            net_invested: true,
+            deposits: true,
+            current_profit_loss: true,
+            total_profit_loss: true,
+        };
 
         async function loadPortfolioSummary() {
             try {
-                const response = await fetch('/api/portfolio-summary');
+                const response = await fetch(`/api/portfolio-summary${otherBrokersQueryParam()}`);
                 const summary = await response.json();
 
                 const fmt = (v) => Math.abs(v).toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2});
@@ -1939,52 +2458,38 @@
 
                 const pct = (v) => v.toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2});
 
+                const otherBrokerHint = summary.other_brokers_count > 0
+                    ? `<div class="summary-calc-line" style="color:var(--text-muted);">Other brokers: ${summary.other_brokers_count} pos.</div>`
+                    : '';
+
+                const sumCell = (key, label, content) => summaryCardVisibility[key]
+                    ? `<td>
+                        <div class="summary-label">${label}</div>
+                        <div class="summary-content">${content}</div>
+                    </td>`
+                    : '<td class="empty-cell"></td>';
+
                 const summaryHtml = `
                     <table class="summary-table">
                         <tr>
-                            <td>
-                                <div class="summary-label">Live Portfolio Value</div>
-                                <div class="summary-content">
-                                    <div class="summary-value">€${fmt(summary.current_value)}</div>
-                                </div>
-                            </td>
-                            <td>
-                                <div class="summary-label">Currently Invested</div>
-                                <div class="summary-content">
-                                    <div class="summary-value">€${fmt(summary.net_invested)}</div>
-                                </div>
-                            </td>
-                            <td>
-                                <div class="summary-label">Deposits</div>
-                                <div class="summary-content">
-                                    <div>
-                                        <div class="summary-value">€${fmt(summary.net_deposited)}</div>
-                                        <div class="summary-calc-line deposit">+ €${fmt(summary.total_deposited)}</div>
-                                        <div class="summary-calc-line withdrawal">− €${fmt(summary.total_withdrawals)}</div>
-                                    </div>
-                                </div>
-                            </td>
+                            ${sumCell('current_value', 'Live Portfolio Value', `<div class="summary-value">€${fmt(summary.current_value)}</div>`)}
+                            ${sumCell('net_invested', 'Currently Invested', `<div class="summary-value">€${fmt(summary.net_invested)}</div>${otherBrokerHint}`)}
+                            ${sumCell('deposits', 'Deposits', `<div>
+                                <div class="summary-value">€${fmt(summary.net_deposited)}</div>
+                                <div class="summary-calc-line deposit">+ €${fmt(summary.total_deposited)}</div>
+                                <div class="summary-calc-line withdrawal">− €${fmt(summary.total_withdrawals)}</div>
+                            </div>`)}
                         </tr>
                         <tr>
                             <td class="empty-cell"></td>
-                            <td>
-                                <div class="summary-label">Current Profit/Loss</div>
-                                <div class="summary-content">
-                                    <div class="summary-value ${cls(summary.gain_loss)}">
-                                        ${sign(summary.gain_loss)}€${fmt(summary.gain_loss)}
-                                        <div class="summary-subvalue">${sign(summary.gain_loss_percent)}${pct(summary.gain_loss_percent)}%</div>
-                                    </div>
-                                </div>
-                            </td>
-                            <td>
-                                <div class="summary-label">Total Profit/Loss</div>
-                                <div class="summary-content">
-                                    <div class="summary-value ${cls(summary.total_profit_loss)}">
-                                        ${sign(summary.total_profit_loss)}€${fmt(summary.total_profit_loss)}
-                                        <div class="summary-subvalue">${sign(summary.total_profit_loss_percent)}${pct(summary.total_profit_loss_percent)}%</div>
-                                    </div>
-                                </div>
-                            </td>
+                            ${sumCell('current_profit_loss', 'Current Profit/Loss', `<div class="summary-value ${cls(summary.gain_loss)}">
+                                ${sign(summary.gain_loss)}€${fmt(summary.gain_loss)}
+                                <div class="summary-subvalue">${sign(summary.gain_loss_percent)}${pct(summary.gain_loss_percent)}%</div>
+                            </div>`)}
+                            ${sumCell('total_profit_loss', 'Total Profit/Loss', `<div class="summary-value ${cls(summary.total_profit_loss)}">
+                                ${sign(summary.total_profit_loss)}€${fmt(summary.total_profit_loss)}
+                                <div class="summary-subvalue">${sign(summary.total_profit_loss_percent)}${pct(summary.total_profit_loss_percent)}%</div>
+                            </div>`)}
                         </tr>
                     </table>
                 `;
@@ -1997,6 +2502,33 @@
                 console.error('Failed to load portfolio summary:', error);
                 // Check if server went offline
                 await checkServerStatus();
+            }
+        }
+
+        async function loadUserPreferences() {
+            try {
+                const response = await fetch('/api/user-preferences');
+                const data = await response.json();
+                if (data?.summary_cards) {
+                    summaryCardVisibility = { ...summaryCardVisibility, ...data.summary_cards };
+                }
+            } catch (error) {
+                console.error('Failed to load user preferences:', error);
+            }
+        }
+
+        async function saveUserPreferences(updates) {
+            try {
+                summaryCardVisibility = { ...summaryCardVisibility, ...updates };
+                const response = await fetch('/api/user-preferences', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ summary_cards: summaryCardVisibility }),
+                });
+                await response.json();
+                await loadPortfolioSummary();
+            } catch (error) {
+                console.error('Failed to save user preferences:', error);
             }
         }
 
@@ -2025,6 +2557,226 @@
                 month: 'short',
                 year: 'numeric',
             });
+        }
+
+        // ─── Theme / dark mode ───────────────────────────────────────────────
+        function getPlotlyThemeColors() {
+            const isDark = document.documentElement.getAttribute('data-theme') === 'dark';
+            return {
+                paper_bgcolor: isDark ? '#1e293b' : '#ffffff',
+                plot_bgcolor: isDark ? '#1e293b' : '#f7fafc',
+                gridcolor: isDark ? '#475569' : '#e2e8f0',
+                font_color: isDark ? '#f1f5f9' : '#2d3748',
+                zerolinecolor: isDark ? '#64748b' : '#cbd5e0',
+            };
+        }
+
+        function applyThemeToAllCharts() {
+            const colors = getPlotlyThemeColors();
+            for (const id of ['portfolio-valuation-chart', 'chart', 'tranche-chart', 'position-percentage-chart', 'index-chart']) {
+                const el = document.getElementById(id);
+                if (el && el.data) {
+                    Plotly.relayout(id, {
+                        'paper_bgcolor': colors.paper_bgcolor,
+                        'plot_bgcolor': colors.plot_bgcolor,
+                        'font.color': colors.font_color,
+                        'xaxis.gridcolor': colors.gridcolor,
+                        'xaxis.zerolinecolor': colors.zerolinecolor,
+                        'yaxis.gridcolor': colors.gridcolor,
+                        'yaxis.zerolinecolor': colors.zerolinecolor,
+                    });
+                }
+            }
+        }
+
+        function initTheme() {
+            const saved = localStorage.getItem('degiro-theme');
+            let theme = 'light';
+            if (saved === 'dark' || saved === 'light') {
+                theme = saved;
+            } else if (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) {
+                theme = 'dark';
+            }
+            document.documentElement.setAttribute('data-theme', theme);
+            updateThemeToggleIcon();
+        }
+
+        function setTheme(theme) {
+            if (theme !== 'light' && theme !== 'dark') return;
+            localStorage.setItem('degiro-theme', theme);
+            document.documentElement.setAttribute('data-theme', theme);
+            updateThemeToggleIcon();
+            applyThemeToAllCharts();
+        }
+
+        function toggleTheme() {
+            const current = document.documentElement.getAttribute('data-theme') === 'dark' ? 'dark' : 'light';
+            setTheme(current === 'dark' ? 'light' : 'dark');
+        }
+
+        function updateThemeToggleIcon() {
+            const btn = document.getElementById('theme-toggle');
+            if (!btn) return;
+            const isDark = document.documentElement.getAttribute('data-theme') === 'dark';
+            btn.innerHTML = isDark ? '☀️' : '🌙';
+            btn.setAttribute('title', isDark ? 'Switch to light mode' : 'Switch to dark mode');
+        }
+
+        function renderChartRangeButtons() {
+            const container = document.getElementById('chart-range-selector');
+            if (!container) return;
+
+            const ranges = [
+                { key: '1W', label: '1W' },
+                { key: '1M', label: '1M' },
+                { key: 'YTD', label: 'YTD' },
+                { key: '1Y', label: '1Y' },
+                { key: '3Y', label: '3Y' },
+                { key: '5Y', label: '5Y' },
+                { key: 'MAX', label: 'MAX' },
+            ];
+
+            container.innerHTML = `
+                <div class="chart-range-bar">
+                    ${ranges.map(r => `
+                        <button
+                            type="button"
+                            class="chart-range-btn ${r.key === selectedChartRange ? 'active' : ''}"
+                            data-range="${r.key}"
+                            onclick="setChartRange('${r.key}')"
+                        >
+                            ${r.label}
+                        </button>
+                    `).join('')}
+                </div>
+            `;
+        }
+
+        function getChartRangeBounds(rangeKey, dates) {
+            if (!dates || dates.length === 0) return [null, null];
+            const lastDate = dates[dates.length - 1];
+            const [lastY, lastM, lastD] = lastDate.split('-').map(Number);
+
+            if (rangeKey === 'MAX') {
+                return [dates[0], lastDate];
+            }
+
+            if (rangeKey === '1W') {
+                const start = addDaysToDate(lastY, lastM, lastD, -7);
+                return [start, lastDate];
+            }
+
+            if (rangeKey === '1M') {
+                const start = addMonthsToDate(lastY, lastM, lastD, -1);
+                return [start, lastDate];
+            }
+
+            if (rangeKey === 'YTD') {
+                return [`${lastY}-01-01`, lastDate];
+            }
+
+            const yearOffsets = { '1Y': -1, '3Y': -3, '5Y': -5 };
+            if (yearOffsets[rangeKey]) {
+                const start = `${lastY + yearOffsets[rangeKey]}-${String(lastM).padStart(2, '0')}-${String(lastD).padStart(2, '0')}`;
+                return [start, lastDate];
+            }
+
+            return [dates[0], lastDate];
+        }
+
+        function addMonthsToDate(y, m, d, months) {
+            const totalMonths = y * 12 + (m - 1) + months;
+            const newYear = Math.floor(totalMonths / 12);
+            const newMonth = totalMonths % 12;
+            const newDay = Math.min(d, daysInMonth(newYear, newMonth + 1));
+            return `${newYear}-${String(newMonth + 1).padStart(2, '0')}-${String(newDay).padStart(2, '0')}`;
+        }
+
+        function addDaysToDate(y, m, d, days) {
+            const date = new Date(y, m - 1, d);
+            date.setDate(date.getDate() + days);
+            return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}`;
+        }
+
+        function daysInMonth(year, month) {
+            return new Date(year, month, 0).getDate();
+        }
+
+        function setChartRange(rangeKey) {
+            selectedChartRange = rangeKey;
+            renderChartRangeButtons();
+            applyChartRange();
+        }
+
+        function applyChartRange() {
+            if (!latestPortfolioHistoryData?.dates?.length) return;
+            const { dates, values, invested } = latestPortfolioHistoryData;
+            const [start, end] = getChartRangeBounds(selectedChartRange, dates);
+            if (!start || !end) return;
+
+            // Find visible data window for the selected x-range
+            let startIdx = dates.findIndex((d) => d >= start);
+            let endIdx = dates.length - 1;
+            for (let i = dates.length - 1; i >= 0; i--) {
+                if (dates[i] <= end) { endIdx = i; break; }
+            }
+            if (startIdx === -1) startIdx = 0;
+            if (endIdx < startIdx) endIdx = startIdx;
+
+            const visibleValues = [];
+            for (let i = startIdx; i <= endIdx; i++) {
+                if (values[i] != null) visibleValues.push(values[i]);
+                if (invested[i] != null) visibleValues.push(invested[i]);
+            }
+
+            let yRange;
+            if (visibleValues.length === 0) {
+                yRange = [0, 1];
+            } else {
+                const dataMin = Math.min(...visibleValues);
+                const dataMax = Math.max(...visibleValues);
+                if (chartAutoScale) {
+                    const span = dataMax - dataMin || Math.abs(dataMax) || 1;
+                    const pad = span * 0.05;
+                    yRange = [dataMin - pad, dataMax + pad];
+                } else {
+                    const top = dataMax > 0 ? dataMax * 1.05 : 1;
+                    yRange = [0, top];
+                }
+            }
+
+            Plotly.relayout('portfolio-valuation-chart', {
+                'xaxis.range': [start, end],
+                'yaxis.range': yRange,
+                'yaxis.autorange': false,
+            });
+        }
+
+        function renderChartScaleToggle() {
+            const container = document.getElementById('chart-scale-toggle');
+            if (!container) return;
+
+            container.innerHTML = `
+                <div class="chart-scale-toggle">
+                    <button
+                        type="button"
+                        class="chart-scale-btn ${chartAutoScale ? 'active' : ''}"
+                        onclick="toggleChartAutoScale()"
+                    >
+                        ${chartAutoScale ? 'Auto scale' : 'From zero'}
+                    </button>
+                </div>
+            `;
+        }
+
+        function toggleChartAutoScale() {
+            chartAutoScale = !chartAutoScale;
+            renderChartScaleToggle();
+            applyChartYAxisScale();
+        }
+
+        function applyChartYAxisScale() {
+            applyChartRange();
         }
 
         function renderPortfolioGraphOverview(data) {
@@ -2197,7 +2949,7 @@
         // Load and render portfolio valuation chart
         async function loadPortfolioValuationChart() {
             try {
-                const response = await fetch('/api/portfolio-valuation-history');
+                const response = await fetch(`/api/portfolio-valuation-history${otherBrokersQueryParam()}`);
                 const data = await response.json();
 
                 if (data.dates.length === 0) {
@@ -2239,19 +2991,22 @@
                     hovertemplate: '<b>Net Invested</b><br>€%{y:,.2f}<br>%{x}<extra></extra>'
                 };
 
+                const theme = getPlotlyThemeColors();
+
                 // Get the most recent date
                 const lastDate = data.dates[data.dates.length - 1];
 
                 const layout = {
                     xaxis: {
                         type: 'date',
-                        gridcolor: '#e2e8f0'
+                        gridcolor: theme.gridcolor
                     },
                     yaxis: {
                         title: 'Value (EUR)',
-                        gridcolor: '#e2e8f0',
+                        gridcolor: theme.gridcolor,
                         tickformat: ',.0f',
-                        tickprefix: '€'
+                        tickprefix: '€',
+                        rangemode: 'tozero'
                     },
                     hovermode: 'x unified',
                     showlegend: true,
@@ -2259,7 +3014,8 @@
                         x: 0,
                         y: 1.15,
                         orientation: 'h',
-                        bgcolor: 'rgba(255, 255, 255, 0.9)'
+                        bgcolor: theme.paper_bgcolor,
+                        font: { color: theme.font_color }
                     },
                     annotations: [{
                         x: 1,
@@ -2281,13 +3037,14 @@
                             family: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif'
                         }
                     }],
-                    plot_bgcolor: '#f7fafc',
-                    paper_bgcolor: 'white',
+                    plot_bgcolor: theme.plot_bgcolor,
+                    paper_bgcolor: theme.paper_bgcolor,
                     margin: window.innerWidth <= 600
                         ? { t: 10, b: 35, l: 55, r: 10 }
                         : { t: 10, b: 40 },
                     font: {
-                        family: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif'
+                        family: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif',
+                        color: theme.font_color
                     }
                 };
 
@@ -2314,6 +3071,10 @@
                         selectedHistoryDate = lastDate;
                         updateHistoryChartSelection(lastDate, false);
                     }
+
+                    renderChartRangeButtons();
+                    applyChartRange();
+                    renderChartScaleToggle();
                 });
 
             } catch (error) {
@@ -2329,7 +3090,7 @@
                 // Fetch exchange rates and holdings in parallel
                 const [, holdingsResp] = await Promise.all([
                     fetchExchangeRates(),
-                    fetch('/api/holdings')
+                    fetch(`/api/holdings${otherBrokersQueryParam()}`)
                 ]);
 
                 const data = await holdingsResp.json();
@@ -2484,6 +3245,7 @@
             renderHoldings(); // Update active state
 
             try {
+                const theme = getPlotlyThemeColors();
                 const response = await fetch(`/api/stock/${stockId}/chart-data`);
                 const data = await response.json();
 
@@ -2497,12 +3259,12 @@
                                        dataProvider === 'fmp' ? 'FMP' : dataProvider;
 
                 const titleElement = document.getElementById('chart-title');
-                titleElement.innerHTML = `${data.stock.name} (${data.stock.symbol}) <span style="font-size: 0.7em; color: #718096; font-weight: 400;">(last updated: ${latestPriceDate} from ${providerDisplay})</span>`;
+                titleElement.innerHTML = `${data.stock.name} (${data.stock.symbol}) <span style="font-size: 0.7em; color: var(--text-muted); font-weight: 400;">(last updated: ${latestPriceDate} from ${providerDisplay})</span>`;
 
                 // Check if we have price data
                 if (!data.prices || data.prices.length === 0) {
                     document.getElementById('chart').innerHTML =
-                        '<div style="padding: 40px; text-align: center; color: #718096;">' +
+                        '<div style="padding: 40px; text-align: center; color: var(--text-muted);">' +
                         '<p style="font-size: 18px; margin-bottom: 10px;">📊 No price data available</p>' +
                         '<p style="font-size: 14px;">Price history for this stock has not been fetched yet.</p>' +
                         '</div>';
@@ -2612,7 +3374,7 @@
             // Filter out price records with null values
             const validPrices = data.prices.filter(p => p.close !== null);
             if (validPrices.length === 0) {
-                document.getElementById('chart-area').innerHTML = '<p style="text-align: center; color: #718096; padding: 40px;">No price data available for this stock yet. Click "Update Market Data" to fetch prices.</p>';
+                document.getElementById('chart-area').innerHTML = '<p style="text-align: center; color: var(--text-muted); padding: 40px;">No price data available for this stock yet. Click "Update Market Data" to fetch prices.</p>';
                 return;
             }
 
@@ -2722,12 +3484,14 @@
                 xaxis: {
                     title: '',
                     rangeslider: { visible: false },
-                    type: 'date'
+                    type: 'date',
+                    gridcolor: theme.gridcolor
                 },
                 yaxis: {
                     title: `Price (${currency})`,
                     fixedrange: false,
-                    autorange: true
+                    autorange: true,
+                    gridcolor: theme.gridcolor
                 },
                 hovermode: 'x unified',
                 showlegend: true,
@@ -2735,13 +3499,15 @@
                     x: 0,
                     y: 1.1,
                     orientation: 'h',
-                    bgcolor: 'rgba(255, 255, 255, 0.9)'
+                    bgcolor: theme.paper_bgcolor,
+                    font: { color: theme.font_color }
                 },
-                plot_bgcolor: '#f7fafc',
-                paper_bgcolor: 'white',
+                plot_bgcolor: theme.plot_bgcolor,
+                paper_bgcolor: theme.paper_bgcolor,
                 margin: { b: 40, t: 10 },
                 font: {
-                    family: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Oxygen, Ubuntu, Cantarell, sans-serif'
+                    family: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Oxygen, Ubuntu, Cantarell, sans-serif',
+                    color: theme.font_color
                 }
             };
 
@@ -2828,11 +3594,13 @@
                 title: '',
                 xaxis: {
                     title: 'Date',
-                    type: 'date'
+                    type: 'date',
+                    gridcolor: theme.gridcolor
                 },
                 yaxis: {
                     title: `Investment Value (${currency})`,
-                    fixedrange: false
+                    fixedrange: false,
+                    gridcolor: theme.gridcolor
                 },
                 hovermode: 'x unified',
                 showlegend: true,
@@ -2840,10 +3608,11 @@
                     x: 0,
                     y: 1.15,
                     orientation: 'h',
-                    bgcolor: 'rgba(255, 255, 255, 0.9)'
+                    bgcolor: theme.paper_bgcolor,
+                    font: { color: theme.font_color }
                 },
-                plot_bgcolor: '#f7fafc',
-                paper_bgcolor: 'white',
+                plot_bgcolor: theme.plot_bgcolor,
+                paper_bgcolor: theme.paper_bgcolor,
                 margin: { t: 10 },
                 font: {
                     family: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Oxygen, Ubuntu, Cantarell, sans-serif'
@@ -2990,23 +3759,24 @@
                     xaxis: {
                         title: 'Date',
                         type: 'date',
-                        gridcolor: '#e2e8f0'
+                        gridcolor: theme.gridcolor
                     },
                     yaxis: {
                         title: 'Position Value (%)',
-                        gridcolor: '#e2e8f0',
+                        gridcolor: theme.gridcolor,
                         range: yRange,
                         fixedrange: false,
                         zeroline: true,
-                        zerolinecolor: '#cbd5e0'
+                        zerolinecolor: theme.zerolinecolor
                     },
                     hovermode: 'x unified',
                     showlegend: false,
-                    plot_bgcolor: '#f7fafc',
-                    paper_bgcolor: 'white',
+                    plot_bgcolor: theme.plot_bgcolor,
+                    paper_bgcolor: theme.paper_bgcolor,
                     margin: { t: 10 },
                     font: {
-                        family: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Oxygen, Ubuntu, Cantarell, sans-serif'
+                        family: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Oxygen, Ubuntu, Cantarell, sans-serif',
+                        color: theme.font_color
                     },
                     shapes: [{
                         type: 'line',
@@ -3089,13 +3859,13 @@
                     height: 350,
                     xaxis: {
                         title: 'Date',
-                        gridcolor: '#e2e8f0'
+                        gridcolor: theme.gridcolor
                     },
                     yaxis: {
                         title: 'Percentage Change (%)',
-                        gridcolor: '#e2e8f0',
+                        gridcolor: theme.gridcolor,
                         zeroline: true,
-                        zerolinecolor: '#cbd5e0',
+                        zerolinecolor: theme.zerolinecolor,
                         zerolinewidth: 2
                     },
                     hovermode: 'x unified',
@@ -3104,13 +3874,15 @@
                         x: 0,
                         y: 1.15,
                         orientation: 'h',
-                        bgcolor: 'rgba(255, 255, 255, 0.9)'
+                        bgcolor: theme.paper_bgcolor,
+                        font: { color: theme.font_color }
                     },
-                    plot_bgcolor: '#f7fafc',
-                    paper_bgcolor: 'white',
+                    plot_bgcolor: theme.plot_bgcolor,
+                    paper_bgcolor: theme.paper_bgcolor,
                     margin: { t: 10 },
                     font: {
-                        family: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Oxygen, Ubuntu, Cantarell, sans-serif'
+                        family: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Oxygen, Ubuntu, Cantarell, sans-serif',
+                        color: theme.font_color
                     }
                 };
 
@@ -3575,7 +4347,7 @@
             container.innerHTML = '<div class="tt-loading">Loading portfolio snapshot...</div>';
 
             try {
-                const resp = await fetch(`/api/time-travel?date=${encodeURIComponent(date)}`);
+                const resp = await fetch(`/api/time-travel?date=${encodeURIComponent(date)}${includeOtherBrokers ? '&includeOtherBrokers=1' : ''}`);
                 const data = await resp.json();
                 renderTimeTravel(data);
             } catch (err) {
@@ -3603,8 +4375,10 @@
             const trackerKeywords = ['ETF', 'UCITS', 'Tracker', 'iShares', 'Vanguard', 'SPDR', 'Amundi', 'Xtrackers', 'Lyxor'];
             const isTracker = (h) => trackerKeywords.some(kw => (h.name || '').toLowerCase().includes(kw.toLowerCase()));
 
-            const stocks = data.holdings.filter(h => !isTracker(h));
-            const trackers = data.holdings.filter(h => isTracker(h));
+            const manualHoldings = data.holdings.filter(h => h.is_manual);
+            const nonManual = data.holdings.filter(h => !h.is_manual);
+            const stocks = nonManual.filter(h => !isTracker(h));
+            const trackers = nonManual.filter(h => isTracker(h));
 
             function renderHoldingRow(h) {
                 const priceStr = h.price != null ? formatPrice(h.price, h.currency) : '—';
@@ -3621,6 +4395,16 @@
                     changeHtml = `<div class="tt-holding-change ${cls}">${sign(h.daily_change_eur)}${fmtEur(h.daily_change_eur)}${pctStr}</div>`;
                 }
 
+                let ytdHtml = '';
+                if (h.ytd_change_eur != null && h.shares) {
+                    const cls = changeCls(h.ytd_change_eur);
+                    const perShare = h.ytd_change_eur / h.shares;
+                    const pctStr = h.ytd_change_pct != null
+                        ? ` (${sign(h.ytd_change_pct)}${Math.abs(h.ytd_change_pct).toLocaleString('nl-NL', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}%)`
+                        : '';
+                    ytdHtml = `<div class="tt-holding-ytd ${cls}">YTD: ${sign(perShare)}${fmtEur(perShare)}/share${pctStr}</div>`;
+                }
+
                 return `
                     <div class="tt-holding-row">
                         <div class="tt-holding-left">
@@ -3630,6 +4414,7 @@
                         <div class="tt-holding-right">
                             <div class="tt-holding-value">${valueStr}</div>
                             ${changeHtml}
+                            ${ytdHtml}
                         </div>
                     </div>
                 `;
@@ -3675,6 +4460,7 @@
             container.innerHTML = `
                 ${renderSection('Stocks', stocks, 'tt-stocks')}
                 ${renderSection("Trackers (ETF's)", trackers, 'tt-trackers')}
+                ${renderSection('Other brokers', manualHoldings, 'tt-other-brokers')}
             `;
         }
 
@@ -3724,14 +4510,14 @@
                         ? `€${m.balance.toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2})}`
                         : '—';
 
-                    return `<tr style="border-bottom: 1px solid #e2e8f0;">
+                    return `<tr style="border-bottom: 1px solid var(--border);">
                         <td style="padding: 8px 12px;">${date}</td>
                         <td style="padding: 8px 12px; color: ${color}; font-weight: 600;">${typeLabel}</td>
-                        <td style="padding: 8px 12px; color: #718096;">${m.description}</td>
+                        <td style="padding: 8px 12px; color: var(--text-muted);">${m.description}</td>
                         <td style="padding: 8px 12px; text-align: right; font-weight: 600; color: ${color};">
                             ${sign}€${Math.abs(m.amount).toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2})}
                         </td>
-                        <td style="padding: 8px 12px; text-align: right; color: #4a5568;">${balanceStr}</td>
+                        <td style="padding: 8px 12px; text-align: right; color: var(--text-secondary);">${balanceStr}</td>
                     </tr>`;
                 }).join('');
 
@@ -3777,6 +4563,7 @@
                     // Update portfolio summary and valuation chart with new prices
                     await loadPortfolioSummary();
                     await loadPortfolioValuationChart();
+                    await loadOtherBrokersPanel();
 
                     // Live prices are active; holdings and summary have been refreshed.
                     livePricesEnabled = true;
@@ -3819,6 +4606,247 @@
             }
         }
 
+        // ─── Other-broker holdings UI ────────────────────────────────────────
+
+        async function fetchServerConfig() {
+            try {
+                const resp = await fetch('/api/config');
+                serverConfig = await resp.json();
+            } catch (err) {
+                console.error('Failed to load server config:', err);
+                serverConfig = { include_other_brokers_default: false };
+            }
+        }
+
+        function initIncludeOtherBrokersToggle() {
+            const saved = localStorage.getItem('includeOtherBrokers');
+            if (saved !== null) {
+                includeOtherBrokers = saved === 'true';
+            } else if (serverConfig) {
+                includeOtherBrokers = !!serverConfig.include_other_brokers_default;
+            }
+            const toggle = document.getElementById('include-other-brokers-toggle');
+            if (toggle) toggle.checked = includeOtherBrokers;
+        }
+
+        async function onIncludeOtherBrokersToggled() {
+            const toggle = document.getElementById('include-other-brokers-toggle');
+            includeOtherBrokers = toggle ? toggle.checked : false;
+            localStorage.setItem('includeOtherBrokers', String(includeOtherBrokers));
+
+            await Promise.all([
+                loadPortfolioSummary(),
+                loadPortfolioValuationChart(),
+                loadHoldings(),
+                refreshTimeTravel(),
+            ]);
+        }
+
+        async function refreshTimeTravel() {
+            const input = document.getElementById('tt-date');
+            if (input && input.value) {
+                await loadTimeTravel(input.value);
+            }
+        }
+
+        function openAddManualHoldingModal() {
+            const container = document.getElementById('manual-holding-modal-container');
+            if (!container) return;
+            container.innerHTML = `
+                <div class="modal-overlay" onclick="closeManualHoldingModal(event)">
+                    <div class="modal" onclick="event.stopPropagation()">
+                        <div class="modal-header">
+                            <h3>Add other-broker holding</h3>
+                            <button class="modal-close" onclick="closeManualHoldingModal()">×</button>
+                        </div>
+                        <div class="modal-body">
+                            <div class="form-group">
+                                <label for="mh-name">Name</label>
+                                <input type="text" id="mh-name" placeholder="e.g. Vanguard FTSE All-World" />
+                            </div>
+                            <div class="form-group">
+                                <label for="mh-ticker">Yahoo ticker</label>
+                                <input type="text" id="mh-ticker" placeholder="e.g. VWCE.DE" />
+                            </div>
+                            <div class="form-group">
+                                <label for="mh-quantity">Quantity</label>
+                                <input type="number" id="mh-quantity" step="0.001" min="0" placeholder="10" />
+                            </div>
+                            <div class="form-group">
+                                <label>Price input</label>
+                                <div class="price-input-toggle">
+                                    <label>
+                                        <input type="radio" name="mh-price-mode" value="total" checked onchange="toggleManualHoldingPriceMode()" />
+                                        Total amount
+                                    </label>
+                                    <label>
+                                        <input type="radio" name="mh-price-mode" value="per-share" onchange="toggleManualHoldingPriceMode()" />
+                                        Per share
+                                    </label>
+                                </div>
+                            </div>
+                            <div class="form-group">
+                                <label for="mh-price" id="mh-price-label">Total amount (€)</label>
+                                <input type="number" id="mh-price" step="0.01" min="0" placeholder="10000" />
+                            </div>
+                            <div class="form-group">
+                                <label for="mh-date">Purchase date</label>
+                                <input type="date" id="mh-date" value="${new Date().toISOString().split('T')[0]}" />
+                            </div>
+                            <div class="form-group">
+                                <label for="mh-broker">Broker (optional)</label>
+                                <input type="text" id="mh-broker" placeholder="e.g. Bolero" />
+                            </div>
+                        </div>
+                        <div class="modal-actions">
+                            <button class="btn-secondary" onclick="closeManualHoldingModal()">Cancel</button>
+                            <button class="btn-primary" onclick="submitManualHolding()">Add holding</button>
+                        </div>
+                    </div>
+                </div>
+            `;
+        }
+
+        function closeManualHoldingModal(event) {
+            if (event && !event.target.classList.contains('modal-overlay')) return;
+            const container = document.getElementById('manual-holding-modal-container');
+            if (container) container.innerHTML = '';
+        }
+
+        function toggleManualHoldingPriceMode() {
+            const mode = document.querySelector('input[name="mh-price-mode"]:checked')?.value || 'total';
+            const label = document.getElementById('mh-price-label');
+            if (label) {
+                label.textContent = mode === 'total' ? 'Total amount (€)' : 'Price per share (€)';
+            }
+        }
+
+        async function submitManualHolding() {
+            const name = document.getElementById('mh-name')?.value.trim();
+            const ticker = document.getElementById('mh-ticker')?.value.trim();
+            const quantity = parseFloat(document.getElementById('mh-quantity')?.value);
+            const price = parseFloat(document.getElementById('mh-price')?.value);
+            const date = document.getElementById('mh-date')?.value;
+            const broker = document.getElementById('mh-broker')?.value.trim();
+            const mode = document.querySelector('input[name="mh-price-mode"]:checked')?.value || 'total';
+
+            if (!name || !ticker || !quantity || quantity <= 0 || !price || price <= 0 || !date) {
+                alert('Please fill in all required fields with valid values.');
+                return;
+            }
+
+            const body = {
+                display_name: name,
+                yahoo_ticker: ticker,
+                quantity,
+                purchase_date: date,
+                broker: broker || undefined,
+            };
+            if (mode === 'total') {
+                body.purchase_price_total = price;
+            } else {
+                body.purchase_price_per_share = price;
+            }
+
+            try {
+                const resp = await fetch('/api/manual-holdings', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(body),
+                });
+                const result = await resp.json();
+                if (!result.success) {
+                    alert(result.message || 'Failed to add holding');
+                    return;
+                }
+                closeManualHoldingModal();
+                await refreshOtherBrokersData();
+            } catch (err) {
+                console.error('Submit manual holding error:', err);
+                alert('Error adding holding: ' + err.message);
+            }
+        }
+
+        async function deleteManualHolding(id) {
+            if (!confirm('Are you sure you want to delete this holding?')) return;
+            try {
+                const resp = await fetch(`/api/manual-holdings/${encodeURIComponent(id)}`, { method: 'DELETE' });
+                const result = await resp.json();
+                if (!result.success) {
+                    alert(result.message || 'Failed to delete holding');
+                    return;
+                }
+                await refreshOtherBrokersData();
+            } catch (err) {
+                console.error('Delete manual holding error:', err);
+                alert('Error deleting holding: ' + err.message);
+            }
+        }
+
+        async function loadOtherBrokersPanel() {
+            const section = document.getElementById('other-brokers-section');
+            const container = document.getElementById('other-brokers-content');
+            if (!section || !container) return;
+
+            try {
+                const resp = await fetch('/api/manual-holdings');
+                const data = await resp.json();
+                const holdings = data.holdings || [];
+
+                if (holdings.length === 0) {
+                    section.style.display = 'block';
+                    container.innerHTML = '<div class="other-brokers-empty">No other-broker holdings added yet. Use “Add holding” below.</div>';
+                    return;
+                }
+
+                section.style.display = 'block';
+                const fmtEur = (v) => '€ ' + Math.abs(v).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+                const sign = (v) => v > 0 ? '+' : (v < 0 ? '-' : '');
+                const cls = (v) => v >= 0 ? 'positive' : 'negative';
+
+                container.innerHTML = `
+                    <div class="other-brokers-list">
+                        ${holdings.map(h => {
+                            const changeHtml = h.gain_loss_eur != null
+                                ? `<div class="other-broker-change ${cls(h.gain_loss_eur)}">${sign(h.gain_loss_eur)}${fmtEur(h.gain_loss_eur)} (${sign(h.gain_loss_percent)}${Math.abs(h.gain_loss_percent).toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2})}%)</div>`
+                                : '';
+                            const dayChangeHtml = h.price_change_pct != null
+                                ? `<div class="other-broker-change ${cls(h.price_change_pct)}">1d: ${sign(h.price_change_pct)}${Math.abs(h.price_change_pct).toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2})}%</div>`
+                                : '';
+                            return `
+                                <div class="other-broker-row">
+                                    <div class="other-broker-left">
+                                        <div class="other-broker-name">${h.name}</div>
+                                        <div class="other-broker-meta">${h.symbol} · ${h.shares} shares · Cost ${fmtEur(h.cost_basis_eur)} · ${h.broker || 'Other'}</div>
+                                    </div>
+                                    <div class="other-broker-right">
+                                        <div class="other-broker-value">${h.total_value_eur != null ? fmtEur(h.total_value_eur) : '—'}</div>
+                                        ${changeHtml}
+                                        ${dayChangeHtml}
+                                        <button class="other-broker-delete" onclick="deleteManualHolding(${h.id})">Delete</button>
+                                    </div>
+                                </div>
+                            `;
+                        }).join('')}
+                    </div>
+                `;
+            } catch (err) {
+                console.error('Failed to load other brokers panel:', err);
+            }
+        }
+
+        async function refreshOtherBrokersData() {
+            await loadOtherBrokersPanel();
+            if (includeOtherBrokers) {
+                await Promise.all([
+                    loadPortfolioSummary(),
+                    loadPortfolioValuationChart(),
+                    loadHoldings(),
+                    refreshTimeTravel(),
+                ]);
+            }
+        }
+
         // Initialize
         function setLoadingStatus(text) {
             const el = document.getElementById('loading-status');
@@ -3826,6 +4854,9 @@
         }
 
         async function initialize() {
+            // Theme first so the first paint already has the right palette
+            initTheme();
+
             // Start continuous server monitoring (every 5 seconds)
             startServerMonitoring();
 
@@ -3835,6 +4866,11 @@
             if (!isOnline) {
                 return;
             }
+
+            // Load server config and set toggle state before fetching data
+            await fetchServerConfig();
+            initIncludeOtherBrokersToggle();
+            await loadUserPreferences();
 
             document.getElementById('portfolio-header').style.display = 'block';
 
@@ -3846,6 +4882,7 @@
                 loadPortfolioSummary(),
                 loadCashMovements(),
                 initTimeTravel(),
+                loadOtherBrokersPanel(),
             ]);
 
             // Fetch live quotes for the exact moment of page load and persist them.
@@ -3857,6 +4894,20 @@
         }
 
         initialize();
+    </script>
+
+    <script>
+        if ('serviceWorker' in navigator && window.isSecureContext) {
+            window.addEventListener('load', () => {
+                navigator.serviceWorker.register('/service-worker.js')
+                    .then((registration) => {
+                        console.log('Service Worker registered:', registration.scope);
+                    })
+                    .catch((error) => {
+                        console.error('Service Worker registration failed:', error);
+                    });
+            });
+        }
     </script>
 
     <!-- Purge Confirmation Modal -->
